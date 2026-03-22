@@ -1,0 +1,40 @@
+# ====================================================
+# Store Traffic Root Cause Analyser - Dependencies
+# ====================================================
+
+# LangGraph & LangChain
+langgraph>=0.2.0
+langchain-core>=0.3.0
+langchain-openai>=0.2.0
+
+# Data & Statistics
+numpy>=1.26.0
+scipy>=1.12.0
+pandas>=2.2.0
+
+# Configuration
+pydantic>=2.6.0
+pydantic-settings>=2.2.0
+python-dotenv>=1.0.0
+
+# Logging & Observability
+structlog>=24.1.0
+
+# Async support
+tenacity>=8.2.0
+
+# Date parsing
+python-dateutil>=2.9.0
+
+
+
+# Demo - Week 6
+
+
+# Data Layer -> Change in that 
+# Change the architecture.
+
+
+# GraphQL to Semantic Layer..
+# Remove GraphQL
+Remoce 4 and 5 7 and 8 
