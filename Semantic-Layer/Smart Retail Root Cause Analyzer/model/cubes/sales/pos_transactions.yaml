@@ -1,0 +1,102 @@
+
+# Table Name: pos_transaction_header
+# ┌─────────────────────┬─────────────────────────────┬─────────┐
+# │ Column              │ Data Type                   │ Key     │
+# ├─────────────────────┼─────────────────────────────┼─────────┤
+# │ pos_transaction_id  │ character varying(50)       │ PRIMARY │
+# │ transaction_datetime│ timestamp without time zone │ NOT NULL│
+# │ business_date       │ date                        │ NOT NULL│
+# │ store_id            │ character varying(50)       │ NOT NULL│
+# │ register_id         │ character varying(50)       │         │
+# │ cashier_id          │ character varying(50)       │ FK      │
+# │ customer_id         │ character varying(50)       │ FK      │
+# │ transaction_type    │ character varying(30)       │         │
+# │ payment_method      │ character varying(30)       │         │
+# │ subtotal_amount     │ numeric(18,2)               │         │
+# │ discount_amount     │ numeric(18,2)               │         │
+# │ tax_amount          │ numeric(18,2)               │         │
+# │ total_amount        │ numeric(18,2)               │         │
+# │ item_count          │ integer                     │         │
+# │ status_cd           │ character varying(20)       │         │
+# │ created_ts          │ timestamp without time zone │         │
+# └─────────────────────┴─────────────────────────────┴─────────┘
+
+cubes:
+  - name: POSTranscations
+    sql_table: pos_transaction_header
+    description: POS transaction header details including payment and sales information
+
+    dimensions:
+      - name: pos_transaction_id
+        sql: pos_transaction_id
+        type: string
+        primary_key: true
+
+      - name: transaction_datetime
+        sql: transaction_datetime
+        type: time
+
+      - name: business_date
+        sql: business_date
+        type: time
+
+      - name: store_id
+        sql: store_id
+        type: string
+
+      - name: register_id
+        sql: register_id
+        type: string
+
+      - name: cashier_id
+        sql: cashier_id
+        type: string
+
+      - name: customer_id
+        sql: customer_id
+        type: string
+
+      - name: transaction_type
+        sql: transaction_type
+        type: string
+
+      - name: payment_method
+        sql: payment_method
+        type: string
+
+      - name: subtotal_amount
+        sql: subtotal_amount
+        type: number
+
+      - name: discount_amount
+        sql: discount_amount
+        type: number
+
+      - name: tax_amount
+        sql: tax_amount
+        type: number
+
+      - name: total_amount
+        sql: total_amount
+        type: number
+
+      - name: item_count
+        sql: item_count
+        type: number
+
+      - name: status_cd
+        sql: status_cd
+        type: string
+
+      - name: created_ts
+        sql: created_ts
+        type: time
+
+    joins:
+      - name: Location
+        sql: "{POSTranscations}.store_id = {Location}.location_id"
+        relationship: many_to_one
+
+      - name: Customers
+        sql: "{POSTranscations}.customer_id = {Customers}.customer_id"
+        relationship: many_to_one

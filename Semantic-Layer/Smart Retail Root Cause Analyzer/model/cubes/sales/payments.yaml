@@ -1,0 +1,64 @@
+
+# # Table Name: payment_transactions
+# ┌──────────────────────┬─────────────────────────────┬─────────┐
+# │ Column               │ Data Type                   │ Key     │
+# ├──────────────────────┼─────────────────────────────┼─────────┤
+# │ payment_transaction_id│ character varying(50)      │ PRIMARY │
+# │ pos_transaction_id   │ character varying(50)       │ FK      │ - pos_transaction_header table
+# │ payment_method       │ character varying(30)       │         │
+# │ payment_provider     │ character varying(50)       │         │
+# │ payment_status       │ character varying(30)       │         │
+# │ authorization_code   │ character varying(100)      │         │
+# │ payment_amount       │ numeric(18,2)               │         │
+# │ currency_code        │ character varying(10)       │         │
+# │ payment_datetime     │ timestamp without time zone │         │
+# │ created_ts           │ timestamp without time zone │         │
+# └──────────────────────┴─────────────────────────────┴─────────┘
+
+cubes:
+  - name: Payments
+    sql_table: payment_transactions
+    description:  Stores payment realted information
+
+    dimensions:
+      - name: payment_transaction_id
+        sql: payment_transaction_id
+        type: string
+        primary_key: true
+      
+      - name: pos_transaction_id
+        sql: pos_transaction_id
+        type: string
+      - name: payment_method
+        sql: payment_method
+        type: string 
+
+      - name: payment_provider
+        sql: payment_provider
+        type: string 
+      
+      - name: payment_status
+        sql: payment_status
+        type: string 
+      
+      - name: authorization_code
+        sql: authorization_code
+        type: string 
+      
+      - name: payment_amount
+        sql: payment_amount
+        type: number
+      - name: currency_code
+        sql: currency_code
+        type: string
+      - name: payment_datetime
+        sql: payment_datetime
+        type: time
+
+    joins:
+      - name: POSTranscations
+        sql: "{Payments}.pos_transaction_id = {POSTranscations}.pos_transaction_id"
+        relationship: many_to_one 
+
+
+  

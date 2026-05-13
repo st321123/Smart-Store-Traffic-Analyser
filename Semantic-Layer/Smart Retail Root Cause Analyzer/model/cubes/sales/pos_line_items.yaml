@@ -1,0 +1,157 @@
+
+# Table Name: pos_line_items
+# ┌────────────────────────────┬─────────────────────────────┬─────────┐
+# │ Column                     │ Data Type                   │ Key     │
+# ├────────────────────────────┼─────────────────────────────┼─────────┤
+# │ pos_line_item_id           │ character varying(50)       │ PRIMARY │
+# │ pos_transaction_id         │ character varying(50)       │  FK     |
+# │ location_id                │ character varying(50)       │  FK     |
+# │ line_number                │ integer                     │ NOT NULL│
+# │ created_dt                 │ timestamp without time zone │         │
+# │ sku_id                     │ character varying(50)       │ NOT NULL│
+# │ product_id                 │ character varying(50)       │  FK     │
+# │ barcode                    │ character varying(50)       │         │
+# │ product_description        │ character varying(255)      │ NOT NULL│
+# │ uom_cd                     │ character varying(10)       │         │
+# │ line_type_cd               │ character varying(20)       │         │
+# │ quantity                   │ numeric(10,3)               │ NOT NULL│
+# │ unit_price                 │ numeric(18,2)               │ NOT NULL│
+# │ selling_price              │ numeric(18,2)               │ NOT NULL│
+# │ extended_price             │ numeric(18,2)               │ NOT NULL│
+# │ discount_amt               │ numeric(18,2)               │         │
+# │ tax_amt                    │ numeric(18,2)               │         │
+# │ tax_rate                   │ numeric(5,4)                │         │
+# │ promo_id                   │ character varying(50)       │ FK      │- This is also FK but we don't need sperate joins becuase sku_id is already available through the Product cube, and poromo_id could be joined to Promotions
+# │ line_total_amt             │ numeric(18,2)               │ NOT NULL│
+# │ price_override_flag        │ character(1)                │         │
+# │ price_override_reason_cd   │ character varying(30)       │         │
+# │ price_override_authorized_by│ character varying(20)      │         │
+# │ weight_kg                  │ numeric(8,3)                │         │
+# │ is_age_restricted          │ character(1)                │         │
+# │ is_weighted_item           │ character(1)                │         │
+# │ is_gift_card               │ character(1)                │         │
+# └────────────────────────────┴─────────────────────────────┴─────────┘
+
+cubes:
+  - name: POSLineItems
+    sql_table: pos_line_items
+    description: Point of sales related information
+
+    dimensions:
+      - name: pos_line_item_id
+        sql: pos_line_item_id
+        type: string 
+        primary_key: true
+      
+
+      - name: pos_transaction_id
+        sql: pos_transaction_id
+        type: string 
+
+      - name: location_id
+        sql: location_id
+        type: string 
+      
+      - name: line_number
+        sql: line_number
+        type: number
+
+      - name: created_dt
+        sql: created_dt
+        type: time
+
+      - name: sku_id
+        sql: sku_id
+        type: string 
+      - name: product_id
+        sql: product_id
+        type: string
+      - name: barcode
+        sql : barcode
+        type: string 
+      - name: product_description
+        sql : product_description
+        type: string 
+      - name: uom_cd
+        sql: uom_cd
+        type: string 
+      - name: line_type_cd
+        sql: line_type_cd
+        type: string
+
+      - name: quantity
+        sql: quantity
+        type: number
+        
+      - name : unit_price
+        sql: unit_price
+        type: number
+
+      - name: selling_price
+        sql: selling_price
+        type: number
+
+      - name: extended_price
+        sql: extended_price
+        type: number
+
+      - name: discount_amt
+        sql: discount_amt
+        type: number
+
+      - name: tax_amt
+        sql: tax_amt
+        type: number
+
+      - name: tax_rate
+        sql: tax_rate
+        type: number
+
+      - name: promo_id
+        sql: promo_id
+        type: string 
+
+      - name: line_total_amt
+        sql: line_total_amt
+        type: number
+
+      - name: price_override_flag
+        sql: price_override_flag
+        type: string 
+
+      - name: price_override_reason_cd
+        sql: price_override_reason_cd
+        type: string 
+
+      - name: price_override_authorized_by
+        sql: price_override_authorized_by
+        type: string 
+
+      - name: weight_kg
+        sql: weight_kg
+        type: number
+
+      - name : is_age_restricted
+        sql: is_age_restricted
+        type: string 
+
+      - name: is_weighted_item
+        sql: is_weighted_item
+        type: string 
+
+      - name: is_gift_card
+        sql: is_gift_card
+        type: string 
+
+    joins:
+      - name: POSTranscations
+        sql: "{POSLineItems}.pos_transaction_id = {POSTranscations}.pos_transaction_id"
+        relationship: many_to_one
+
+      - name: Location
+        sql: "{POSLineItems}.location_id = {Location}.location_id"
+        relationship: many_to_one
+
+      - name: Product
+        sql: "{POSLineItems}.product_id = {Product}.product_id"
+        relationship: many_to_one

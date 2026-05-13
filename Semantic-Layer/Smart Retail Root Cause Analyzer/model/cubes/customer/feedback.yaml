@@ -1,0 +1,76 @@
+
+# Table Name: customer_feedback
+# ┌────────────────────┬─────────────────────────────┬─────────┐
+# │ Column             │ Data Type                   │ Key     │
+# ├────────────────────┼─────────────────────────────┼─────────┤
+# │ feedback_id        │ character varying(50)       │ PRIMARY │
+# │ customer_id        │ character varying(50)       │ FK      │
+# │ store_id           │ character varying(50)       │ FK      │
+# │ pos_transaction_id │ character varying(50)       │ FK      │
+# │ feedback_date      │ date                        │         │
+# │ feedback_channel   │ character varying(30)       │         │
+# │ rating             │ integer                     │         │
+# │ feedback_category  │ character varying(50)       │         │
+# │ feedback_comments  │ text                        │         │
+# │ resolution_status  │ character varying(30)       │         │
+# │ created_ts         │ timestamp without time zone │         │
+# └────────────────────┴─────────────────────────────┴─────────┘
+cubes:
+  - name: Feedback
+    sql_table: customer_feedback
+    description: Customer feedback and ratings collected across channels
+
+    dimensions:
+      - name: feedback_id
+        sql: feedback_id
+        type: string
+        primary_key: true
+
+      - name: customer_id
+        sql: customer_id
+        type: string
+
+      - name: store_id
+        sql: store_id
+        type: string
+
+      - name: pos_transaction_id
+        sql: pos_transaction_id
+        type: string
+
+      - name: feedback_date
+        sql: feedback_date
+        type: time
+
+      - name: feedback_channel
+        sql: feedback_channel
+        type: string
+
+      - name: rating
+        sql: rating
+        type: number
+
+      - name: feedback_category
+        sql: feedback_category
+        type: string
+
+      - name: feedback_comments
+        sql: feedback_comments
+        type: string
+
+      - name: resolution_status
+        sql: resolution_status
+        type: string
+
+      - name: created_ts
+        sql: created_ts
+        type: time
+
+    joins:
+      - name: Location
+        sql: "{Feedback}.store_id = {Location}.location_id"
+        relationship: many_to_one
+
+      - name: Customers
+        sql: "{Feedback}.customer_id = {Customers}.customer_id"
+        relationship: many_to_one

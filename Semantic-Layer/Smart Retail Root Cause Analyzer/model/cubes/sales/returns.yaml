@@ -1,0 +1,161 @@
+
+# Table Name: return_header
+# ┌────────────────────────┬─────────────────────────────┬─────────┐
+# │ Column                 │ Data Type                   │ Key     │
+# ├────────────────────────┼─────────────────────────────┼─────────┤
+# │ return_header_id       │ character varying(50)       │ PRIMARY │
+# │ return_number          │ character varying(50)       │ NOT NULL│
+# │ order_header_id        │ character varying(50)       │ NOT NULL│
+# │ shipment_header_id     │ character varying(50)       │ FK      │
+# │ created_dt             │ timestamp without time zone │         │
+# │ last_updated_dt        │ timestamp without time zone │         │
+# │ return_channel_cd      │ character varying(20)       │ NOT NULL│
+# │ receiving_location_id  │ character varying(50)       │ FK      │
+# │ return_status_cd       │ character varying(20)       │ NOT NULL│
+# │ return_status_dt       │ timestamp without time zone │ NOT NULL│
+# │ return_reason_cd       │ character varying(30)       │ NOT NULL│
+# │ return_reason_notes    │ character varying(500)      │         │
+# │ disposition_cd         │ character varying(20)       │         │
+# │ disposition_dt         │ timestamp without time zone │         │
+# │ customer_id            │ character varying(50)       │ FK      │
+# │ customer_email         │ character varying(120)      │ NOT NULL│
+# │ rma_number             │ character varying(40)       │         │
+# │ return_label_issued_dt │ timestamp without time zone │         │
+# │ return_initiated_dt    │ timestamp without time zone │ NOT NULL│
+# │ return_received_dt     │ timestamp without time zone │         │
+# │ inspection_completed_dt│ timestamp without time zone │         │
+# │ return_carrier_cd      │ character varying(20)       │         │
+# │ return_tracking_number │ character varying(80)       │         │
+# │ refund_method_cd       │ character varying(20)       │         │
+# │ refund_amount          │ numeric(18,2)               │         │
+# │ refund_currency_cd     │ character(3)                │         │
+# │ refund_issued_dt       │ date                        │         │
+# │ refund_transaction_id  │ character varying(60)       │         │
+# └────────────────────────┴─────────────────────────────┴─────────┘
+
+cubes: 
+  - name: Returns
+    sql_table: return_header
+    description: Overall return request/return order
+  
+    dimensions:
+      - name: return_header_id
+        sql: return_header_id
+        type: string 
+        primary_key: true
+
+      - name: return_number
+        sql: return_number
+        type: string
+
+      - name: order_header_id
+        sql: order_header_id
+        type: string
+
+      - name: shipment_header_id
+        sql: shipment_header_id
+        type: string
+
+      - name: created_dt
+        sql: created_dt
+        type: time
+
+      - name: last_updated_dt
+        sql: last_updated_dt
+        type: time
+
+      - name: return_channel_cd
+        sql: return_channel_cd
+        type: string
+
+      - name: receiving_location_id
+        sql: receiving_location_id
+        type: string
+
+      - name: return_status_cd
+        sql: return_status_cd
+        type: string
+
+      - name: return_status_dt
+        sql: return_status_dt
+        type: time
+
+      - name: return_reason_cd
+        sql: return_reason_cd
+        type: string
+
+      - name: return_reason_notes
+        sql: return_reason_notes
+        type: string
+
+      - name: disposition_cd
+        sql: disposition_cd
+        type: string
+
+      - name: disposition_dt
+        sql: disposition_dt
+        type: time
+
+      - name: customer_id
+        sql: customer_id
+        type: string
+
+      - name: customer_email
+        sql: customer_email
+        type: string
+
+      - name: rma_number
+        sql: rma_number
+        type: string
+
+      - name: return_label_issued_dt
+        sql: return_label_issued_dt
+        type: time
+
+      - name: return_initiated_dt
+        sql: return_initiated_dt
+        type: time
+
+      - name: return_received_dt
+        sql: return_received_dt
+        type: time
+
+      - name: inspection_completed_dt
+        sql: inspection_completed_dt
+        type: time
+
+      - name: return_carrier_cd
+        sql: return_carrier_cd
+        type: string
+
+      - name: return_tracking_number
+        sql: return_tracking_number
+        type: string
+
+      - name: refund_method_cd
+        sql: refund_method_cd
+        type: string
+
+      - name: refund_amount
+        sql: refund_amount
+        type: number
+
+      - name: refund_currency_cd
+        sql: refund_currency_cd
+        type: string
+
+      - name: refund_issued_dt
+        sql: refund_issued_dt
+        type: time
+
+      - name: refund_transaction_id
+        sql: refund_transaction_id
+        type: string
+
+    joins:
+      - name: Customers
+        sql: "{Returns}.customer_id ={Customers}.customer_id "
+        relationship: many_to_one
+
+
+      

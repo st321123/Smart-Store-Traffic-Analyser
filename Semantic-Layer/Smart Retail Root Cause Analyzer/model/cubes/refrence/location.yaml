@@ -1,0 +1,65 @@
+# Table Name: location_master
+# ┌───────────────┬─────────────────────────┬─────────┐
+# │ Column        │ Data Type               │ Key     │
+# ├───────────────┼─────────────────────────┼─────────┤
+# │ location_id   │ character varying(50)   │ PRIMARY │
+# │ location_name │ character varying(100)  │         │
+# │ city          │ character varying(100)  │         │
+# │ state         │ character varying(100)  │         │
+# │ country       │ character varying(50)   │         │
+# │ region        │ character varying(50)   │         │
+# │ store_type    │ character varying(50)   │         │
+# │ opened_date   │ date                    │         │
+# └───────────────┴─────────────────────────┴─────────┘
+cubes:
+  - name: Location
+    sql_table : location_master
+    description : Store locations with geography and store type.
+    
+
+    dimensions :
+      - name: location_id
+        sql: location_id
+        type: string
+        primary_key: true
+
+      - name: location_name
+        sql: location_name
+        type: string
+        
+      - name: city
+        sql: city
+        type: string
+        
+
+      - name: state
+        sql: state
+        type: string
+      
+      - name: country
+        sql: country
+        type: string
+
+      - name: region
+        sql: region
+        type: string
+        
+      - name: store_type
+        sql: store_type
+        type: string
+
+      - name: opened_date
+        sql: opened_date
+        type: time
+
+    measures: 
+      - name: store_count
+        sql: location_id
+        type: count_distinct
+      
+      
+
+
+
+
+

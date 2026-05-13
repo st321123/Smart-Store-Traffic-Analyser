@@ -1,0 +1,58 @@
+
+# Table Name: store_external_events
+# ┌────────────────────┬─────────────────────────────┬─────────┐
+# │ Column             │ Data Type                   │ Key     │
+# ├────────────────────┼─────────────────────────────┼─────────┤
+# │ event_id           │ integer                     │ PRIMARY │
+# │ store_id           │ character varying(50)       │ FK│
+# │ event_date         │ date                        │ NOT NULL│
+# │ event_type         │ character varying(50)       │ NOT NULL│
+# │ event_description  │ text                        │         │
+# │ impact_level       │ character varying(10)       │         │
+# │ created_at         │ timestamp without time zone │         │
+# │ updated_at         │ timestamp without time zone │         │
+# └────────────────────┴─────────────────────────────┴─────────┘
+
+cubes:
+  - name: ExternalEvents
+    sql_table: store_external_events
+    description: External events affecting store operations and sales
+
+    dimensions:
+      - name: event_id
+        sql: event_id
+        type: number
+        primary_key: true
+
+      - name: store_id
+        sql: store_id
+        type: string
+
+      - name: event_date
+        sql: event_date
+        type: time
+
+      - name: event_type
+        sql: event_type
+        type: string
+
+      - name: event_description
+        sql: event_description
+        type: string
+
+      - name: impact_level
+        sql: impact_level
+        type: string
+
+      - name: created_at
+        sql: created_at
+        type: time
+
+      - name: updated_at
+        sql: updated_at
+        type: time
+
+    joins:
+      - name: Location
+        sql: "{ExternalEvents}.store_id = {Location}.location_id"
+        relationship: many_to_one

@@ -1,0 +1,76 @@
+# Table Name: customer_loyalty_transactions
+# ┌─────────────────────────┬─────────────────────────────┬─────────┐
+# │ Column                  │ Data Type                   │ Key     │
+# ├─────────────────────────┼─────────────────────────────┼─────────┤
+# │ loyalty_transaction_id  │ character varying(50)       │ PRIMARY │
+# │ customer_id             │ character varying(50)       │ FK      │
+# │ loyalty_id              │ character varying(50)       │         │
+# │ transaction_date        │ date                        │         │
+# │ transaction_type        │ character varying(30)       │         │
+# │ points_earned           │ integer                     │         │
+# │ points_redeemed         │ integer                     │         │
+# │ points_balance          │ integer                     │         │
+# │ reference_transaction_id│ character varying(50)       │         │
+# │ created_ts              │ timestamp without time zone │         │
+# └─────────────────────────┴─────────────────────────────┴─────────┘
+
+cubes:
+  - name: CustomerLoyalty
+    sql_table: customer_loyalty_transactions
+    description: Tracks customer loyalty points earned, redeemed, and balances
+
+    dimensions:
+      - name: loyalty_transaction_id
+        sql: loyalty_transaction_id
+        type: string
+        primary_key: true
+
+      - name: customer_id
+        sql: customer_id
+        type: string
+
+      - name: loyalty_id
+        sql: loyalty_id
+        type: string
+
+      - name: transaction_date
+        sql: transaction_date
+        type: time
+
+      - name: transaction_type
+        sql: transaction_type
+        type: string
+
+      - name: points_earned
+        sql: points_earned
+        type: number
+
+      - name: points_redeemed
+        sql: points_redeemed
+        type: number
+
+      - name: points_balance
+        sql: points_balance
+        type: number
+
+      - name: reference_transaction_id
+        sql: reference_transaction_id
+        type: string
+
+      - name: created_ts
+        sql: created_ts
+        type: time
+      
+    measures: 
+      - name: total_poinits_earned
+        sql: points_earned
+        type: sum
+      
+      - name: total_points_redeemed
+        sql: points_redeemed
+        type: sum
+    
+    joins:
+      - name: Customers
+        sql: "{CustomerLoyalty}.customer_id ={Customers}.customer_id "
+        relationship: many_to_one

@@ -1,0 +1,62 @@
+# Table Name: supplier_master
+# ┌───────────────┬─────────────────────────────┬─────────┐
+# │ Column        │ Data Type                   │ Key     │
+# ├───────────────┼─────────────────────────────┼─────────┤
+# │ supplier_id   │ character varying(50)       │ PRIMARY │
+# │ supplier_name │ character varying(255)      │         │
+# │ supplier_type │ character varying(50)       │         │
+# │ contact_name  │ character varying(100)      │         │
+# │ email         │ character varying(255)      │         │
+# │ phone         │ character varying(50)       │         │
+# │ country_code  │ character varying(10)       │         │
+# │ city          │ character varying(100)      │         │
+# │ status_cd     │ character varying(20)       │         │
+# │ created_ts    │ timestamp without time zone │         │
+# └───────────────┴─────────────────────────────┴─────────┘
+cubes:
+  - name: Supplier
+    sql_table : supplier_master
+    description: Supplier refrence data.
+
+    dimensions:
+      - name: supplier_id
+        sql: supplier_id
+        type: string
+        primary_key: true
+
+      - name: supplier_name
+        sql: supplier_name
+        type: string
+
+      - name: supplier_type
+        sql: supplier_type
+        type: string 
+
+      - name: contact_name
+        sql: contact_name
+        type: string
+
+      - name: email
+        sql: email
+        type: string
+
+      - name: phone
+        sql: phone
+        type: string
+
+      - name: country_code
+        sql: country_code
+        type: string
+      
+      - name: city
+        sql: city
+        type: string
+      
+      - name: status_cd
+        sql: status_cd
+        type: string 
+      
+      - name: created_ts
+        sql: created_ts
+        type: time
+

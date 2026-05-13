@@ -1,0 +1,55 @@
+# Table Name: inventory_snapshot
+# ┌────────────────┬─────────────────────────┬─────────┐
+# │ Column         │ Data Type               │ Key     │
+# ├────────────────┼─────────────────────────┼─────────┤
+# │ snapshot_id    │ character varying(50)   │ PRIMARY │
+# │ snapshot_date  │ date                    │         │
+# │ location_id    │ character varying(50)   │ FK      │
+# │ product_id     │ character varying(50)   │ FK      │
+# │ on_hand_qty    │ integer                 │         │
+# │ reserved_qty   │ integer                 │         │
+# │ damaged_qty    │ integer                 │         │
+# └────────────────┴─────────────────────────┴─────────┘
+cubes:
+  - name: Inventory
+    sql_table: inventory_snapshot
+    description: Snapshot of inventory quantities by product and location
+
+    dimensions:
+      - name: snapshot_id
+        sql: snapshot_id
+        type: string
+        primary_key: true
+
+      - name: snapshot_date
+        sql: snapshot_date
+        type: time
+
+      - name: location_id
+        sql: location_id
+        type: string
+
+      - name: product_id
+        sql: product_id
+        type: string
+
+      - name: on_hand_qty
+        sql: on_hand_qty
+        type: number
+
+      - name: reserved_qty
+        sql: reserved_qty
+        type: number
+
+      - name: damaged_qty
+        sql: damaged_qty
+        type: number
+
+    joins:
+      - name: Location
+        sql: "{Inventory}.location_id = {Location}.location_id"
+        relationship: many_to_one
+
+      - name: Product
+        sql: "{Inventory}.product_id = {Product}.product_id"
+        relationship: many_to_one

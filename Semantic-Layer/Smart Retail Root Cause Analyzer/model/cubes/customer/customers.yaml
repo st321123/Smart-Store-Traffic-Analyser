@@ -1,0 +1,63 @@
+
+# Table Name: customer_master
+# ┌────────────────┬─────────────────────────┬─────────┐
+# │ Column         │ Data Type               │ Key     │
+# ├────────────────┼─────────────────────────┼─────────┤
+# │ customer_id    │ character varying(50)   │ PRIMARY │
+# │ first_name     │ character varying(100)  │         │
+# │ last_name      │ character varying(100)  │         │
+# │ gender_cd      │ character(1)            │         │
+# │ email          │ character varying(120)  │         │
+# │ phone_number   │ character varying(20)   │         │
+# │ city           │ character varying(100)  │         │
+# │ state          │ character varying(100)  │         │
+# │ loyalty_status │ character varying(20)   │         │
+# │ join_date      │ date                    │         │
+# └────────────────┴─────────────────────────┴─────────┘
+
+cubes:
+  - name: Customers
+    sql_table: customer_master
+    description: Master data for customer information and loyalty status
+
+    dimensions:
+      - name: customer_id
+        sql: customer_id
+        type: string
+        primary_key: true
+
+      - name: first_name
+        sql: first_name
+        type: string
+
+      - name: last_name
+        sql: last_name
+        type: string
+
+      - name: gender_cd
+        sql: gender_cd
+        type: string
+
+      - name: email
+        sql: email
+        type: string
+
+      - name: phone_number
+        sql: phone_number
+        type: string
+
+      - name: city
+        sql: city
+        type: string
+
+      - name: state
+        sql: state
+        type: string
+
+      - name: loyalty_status
+        sql: loyalty_status
+        type: string
+
+      - name: join_date
+        sql: join_date
+        type: time

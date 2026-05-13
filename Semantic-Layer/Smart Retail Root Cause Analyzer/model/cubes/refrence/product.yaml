@@ -1,0 +1,101 @@
+# Table Name: product_hierarchy
+# ┌──────────────────┬─────────────────────────┬─────────┐
+# │ Column           │ Data Type               │ Key     │
+# ├──────────────────┼─────────────────────────┼─────────┤
+# │ hierarchy_id     │ character varying(50)   │ PRIMARY │
+# │ department_name  │ character varying(100)  │         │
+# │ category_name    │ character varying(100)  │         │
+# │ subcategory_name │ character varying(100)  │         │
+# └──────────────────┴─────────────────────────┴─────────┘
+
+# Table Name: product_master
+# ┌──────────────┬─────────────────────────┬─────────┐
+# │ Column       │ Data Type               │ Key     │
+# ├──────────────┼─────────────────────────┼─────────┤
+# │ product_id   │ character varying(50)   │ PRIMARY │
+# │ hierarchy_id │ character varying(50)   │ FK      │
+# │ product_name │ character varying(150)  │         │
+# │ brand_name   │ character varying(100)  │         │
+# │ sku_id       │ character varying(50)   │         │
+# │ barcode      │ character varying(50)   │         │
+# │ color        │ character varying(50)   │         │
+# │ size_cd      │ character varying(20)   │         │
+# │ launch_date  │ date                    │         │
+# │ status_cd    │ character varying(20)   │         │
+# └──────────────┴─────────────────────────┴─────────┘
+cubes:
+  - name: Product
+    sql: >
+      SELECT
+        pm.product_id,
+        pm.hierarchy_id,
+        pm.product_name,
+        pm.brand_name,
+        pm.sku_id,
+        pm.barcode,
+        pm.color,
+        pm.size_cd,
+        pm.launch_date,
+        pm.status_cd,
+        ph.department_name,
+        ph.category_name,
+        ph.subcategory_name
+      FROM product_master pm
+      LEFT JOIN product_hierarchy ph
+        ON pm.hierarchy_id = ph.hierarchy_id
+
+    description: Combined product master and product hierarchy details
+
+    dimensions:
+      - name: product_id
+        sql: product_id
+        type: string
+        primary_key: true
+
+      - name: hierarchy_id
+        sql: hierarchy_id
+        type: string
+
+      - name: product_name
+        sql: product_name
+        type: string
+
+      - name: brand_name
+        sql: brand_name
+        type: string
+
+      - name: sku_id
+        sql: sku_id
+        type: string
+
+      - name: barcode
+        sql: barcode
+        type: string
+
+      - name: color
+        sql: color
+        type: string
+
+      - name: size_cd
+        sql: size_cd
+        type: string
+
+      - name: launch_date
+        sql: launch_date
+        type: time
+
+      - name: status_cd
+        sql: status_cd
+        type: string
+
+      - name: department_name
+        sql: department_name
+        type: string
+
+      - name: category_name
+        sql: category_name
+        type: string
+
+      - name: subcategory_name
+        sql: subcategory_name
+        type: string

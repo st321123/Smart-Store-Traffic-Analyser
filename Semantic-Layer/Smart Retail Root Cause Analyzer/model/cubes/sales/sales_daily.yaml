@@ -1,0 +1,47 @@
+# Table Name: sales_daily_summary
+# ┌────────────────────┬─────────────────────────┬─────────┐
+# │ Column             │ Data Type               │ Key     │
+# ├────────────────────┼─────────────────────────┼─────────┤
+# │ sales_summary_id   │ character varying(50)   │ PRIMARY │
+# │ location_id        │ character varying(50)   │ FK      │
+# │ sales_date         │ date                    │         │
+# │ total_sales_amt    │ numeric(18,2)           │         │
+# │ total_transactions │ integer                 │         │
+# │ total_units_sold   │ integer                 │         │
+# └────────────────────┴─────────────────────────┴─────────┘
+
+cubes:
+  - name: SalesDaily
+    sql_table: sales_daily_summary
+    description: Daily aggregated sales summary by location
+
+    dimensions:
+      - name: sales_summary_id
+        sql: sales_summary_id
+        type: string
+        primary_key: true
+
+      - name: location_id
+        sql: location_id
+        type: string
+
+      - name: sales_date
+        sql: sales_date
+        type: time
+
+      - name: total_sales_amt
+        sql: total_sales_amt
+        type: number
+
+      - name: total_transactions
+        sql: total_transactions
+        type: number
+
+      - name: total_units_sold
+        sql: total_units_sold
+        type: number
+
+    joins:
+      - name: Location
+        sql: "{SalesDaily}.location_id = {Location}.location_id"
+        relationship: many_to_one

@@ -1,0 +1,72 @@
+# Table Name: product_reviews
+# ┌───────────────────────┬─────────────────────────────┬─────────┐
+# │ Column                │ Data Type                   │ Key     │
+# ├───────────────────────┼─────────────────────────────┼─────────┤
+# │ review_id             │ character varying(50)       │ PRIMARY │
+# │ product_id            │ character varying(50)       │ FK      │
+# │ customer_id           │ character varying(50)       │ FK      │
+# │ review_date           │ date                        │         │
+# │ rating                │ integer                     │         │
+# │ review_title          │ character varying(255)      │         │
+# │ review_text           │ text                        │         │
+# │ verified_purchase_flag│ boolean                     │         │
+# │ helpful_votes         │ integer                     │         │
+# │ created_ts            │ timestamp without time zone │         │
+# └───────────────────────┴─────────────────────────────┴─────────┘
+
+
+cubes:
+  - name: ProductReviews
+    sql_table: product_reviews
+    description: Customer reviews and ratings for products
+
+    dimensions:
+      - name: review_id
+        sql: review_id
+        type: string
+        primary_key: true
+
+      - name: product_id
+        sql: product_id
+        type: string
+
+      - name: customer_id
+        sql: customer_id
+        type: string
+
+      - name: review_date
+        sql: review_date
+        type: time
+
+      - name: rating
+        sql: rating
+        type: number
+
+      - name: review_title
+        sql: review_title
+        type: string
+
+      - name: review_text
+        sql: review_text
+        type: string
+
+      - name: verified_purchase_flag
+        sql: verified_purchase_flag
+        type: boolean
+
+      - name: helpful_votes
+        sql: helpful_votes
+        type: number
+
+      - name: created_ts
+        sql: created_ts
+        type: time
+
+    joins: 
+      - name: Product
+        sql: "{ProductReviews}.product_id = {Product}.product_id"
+        relationship: many_to_one
+        
+      - name: Customers
+        sql: "{ProductReviews}.customer_id = {Customers}.customer_id"
+        relationship: many_to_one

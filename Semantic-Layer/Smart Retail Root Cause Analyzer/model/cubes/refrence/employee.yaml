@@ -1,0 +1,72 @@
+# Table Name: employee_master
+# ┌────────────────────┬─────────────────────────────┬─────────┐
+# │ Column             │ Data Type                   │ Key     │
+# ├────────────────────┼─────────────────────────────┼─────────┤
+# │ employee_id        │ character varying(50)       │ PRIMARY │
+# │ employee_name      │ character varying(255)      │         │
+# │ employee_role      │ character varying(100)      │         │
+# │ store_id           │ character varying(50)       │ FK      │
+# │ department_name    │ character varying(100)      │         │
+# │ hire_date          │ date                        │         │
+# │ employment_status  │ character varying(30)       │         │
+# │ manager_id         │ character varying(50)       │ FK      │
+# │ email              │ character varying(255)      │         │
+# │ phone              │ character varying(50)       │         │
+# │ created_ts         │ timestamp without time zone │         │
+# └────────────────────┴─────────────────────────────┴─────────┘
+cubes:
+  - name: Employee
+    sql_table: employee_master
+    description: Employee refence data.
+    
+    dimensions:
+      - name: employee_id
+        sql:  employee_id
+        type: string
+        primary_key: true
+
+      - name:  employee_name
+        sql: employee_name
+        type: string
+      
+      - name: employee_role
+        sql: employee_role
+        type: string
+
+      - name: store_id
+        sql: store_id
+        type: string 
+      - name: department_name
+        sql: department_name
+        type: string 
+
+      - name: hire_date
+        sql: hire_date
+        type: time
+      - name: employment_status
+        sql: employment_status
+        type: string 
+      - name : manager_id
+        sql: manager_id
+        type: string 
+      - name: email
+        sql: email
+        type: string 
+      - name: phone
+        sql: phone
+        type: string
+      - name: created_ts
+        sql: created_ts
+        type: time
+      
+    measures: 
+      - name : employee_count 
+        sql: employee_id
+        type: count_distinct
+
+    joins:
+      - name : Location
+        sql: "{Employee}.store_id = {Location}.location_id"
+        relationship : many_to_one
+  
+

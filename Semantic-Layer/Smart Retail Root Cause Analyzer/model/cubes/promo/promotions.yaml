@@ -1,0 +1,80 @@
+# Table Name: promo_header
+# ┌──────────────┬─────────────────────────┬─────────┐
+# │ Column       │ Data Type               │ Key     │
+# ├──────────────┼─────────────────────────┼─────────┤
+# │ promo_id     │ character varying(50)   │ PRIMARY │
+# │ promo_name   │ character varying(150)  │         │
+# │ promo_type   │ character varying(50)   │         │
+# │ start_date   │ date                    │         │
+# │ end_date     │ date                    │         │
+# │ discount_pct │ numeric(5,2)            │         │
+# └──────────────┴─────────────────────────┴─────────┘
+
+
+# Table Name: promo_item_mapping
+# ┌──────────────────┬─────────────────────────┬─────────┐
+# │ Column           │ Data Type               │ Key     │
+# ├──────────────────┼─────────────────────────┼─────────┤
+# │ promo_mapping_id │ character varying(50)   │ PRIMARY │
+# │ promo_id         │ character varying(50)   │ FK      │
+# │ product_id       │ character varying(50)   │ FK      │
+# └──────────────────┴─────────────────────────┴─────────┘
+
+cubes:
+  - name: Promotions
+    sql: >
+      SELECT
+        ph.promo_id,
+        ph.promo_name,
+        ph.promo_type,
+        ph.start_date,
+        ph.end_date,
+        ph.discount_pct,
+
+        pm.promo_mapping_id,
+        pm.product_id
+
+      FROM promo_header ph
+      LEFT JOIN promo_item_mapping pm
+        ON ph.promo_id = pm.promo_id
+
+    description: Combined promotion header and product mapping details
+
+    dimensions:
+      - name: promo_id
+        sql: promo_id
+        type: string
+        primary_key: true
+
+      - name: promo_name
+        sql: promo_name
+        type: string
+
+      - name: promo_type
+        sql: promo_type
+        type: string
+
+      - name: start_date
+        sql: start_date
+        type: time
+
+      - name: end_date
+        sql: end_date
+        type: time
+
+      - name: discount_pct
+        sql: discount_pct
+        type: number
+
+      - name: promo_mapping_id
+        sql: promo_mapping_id
+        type: string
+
+      - name: product_id
+        sql: product_id
+        type: string
+
+    joins:
+      - name: Product
+        sql: "{Promotions}.product_id = {Product}.product_id"
+        relationship: many_to_one

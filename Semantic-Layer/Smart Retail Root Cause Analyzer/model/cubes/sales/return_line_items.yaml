@@ -1,0 +1,75 @@
+# Table Name: return_line_items
+# ┌─────────────────────┬─────────────────────────────┬─────────┐
+# │ Column              │ Data Type                   │ Key     │
+# ├─────────────────────┼─────────────────────────────┼─────────┤
+# │ return_line_id      │ character varying(50)       │ PRIMARY │
+# │ return_header_id    │ character varying(50)       │ NOT NULL│
+# │ pos_transaction_id  │ character varying(50)       │ FK      │
+# │ product_id          │ character varying(50)       │ NOT NULL│
+# │ sku_id              │ character varying(50)       │         │
+# │ quantity            │ numeric(18,2)               │         │
+# │ unit_price          │ numeric(18,2)               │         │
+# │ refund_amount       │ numeric(18,2)               │         │
+# │ return_reason_cd    │ character varying(50)       │         │
+# │ disposition_cd      │ character varying(50)       │         │
+# │ created_ts          │ timestamp without time zone │         │
+# └─────────────────────┴─────────────────────────────┴─────────┘
+cubes:
+  - name: ReturnLineItems
+    sql_table: return_line_items
+    description: Line level details for returned products
+
+    dimensions:
+      - name: return_line_id
+        sql: return_line_id
+        type: string
+        primary_key: true
+
+      - name: return_header_id
+        sql: return_header_id
+        type: string
+
+      - name: pos_transaction_id
+        sql: pos_transaction_id
+        type: string
+
+      - name: product_id
+        sql: product_id
+        type: string
+
+      - name: sku_id
+        sql: sku_id
+        type: string
+
+      - name: quantity
+        sql: quantity
+        type: number
+
+      - name: unit_price
+        sql: unit_price
+        type: number
+
+      - name: refund_amount
+        sql: refund_amount
+        type: number
+
+      - name: return_reason_cd
+        sql: return_reason_cd
+        type: string
+
+      - name: disposition_cd
+        sql: disposition_cd
+        type: string
+
+      - name: created_ts
+        sql: created_ts
+        type: time
+
+    joins:
+      - name: Customers
+        sql: "{Returns}.customer_id = {Customers}.customer_id"
+        relationship: many_to_one
+
+      - name: Product
+        sql: "{POSLineItems}.product_id = {Product}.product_id"
+        relationship: many_to_one

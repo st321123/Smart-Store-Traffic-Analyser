@@ -1,0 +1,62 @@
+# Table Name: calendar_dim
+# ┌──────────────┬─────────────────────────┬─────────┐
+# │ Column       │ Data Type               │ Key     │
+# ├──────────────┼─────────────────────────┼─────────┤
+# │ calendar_id  │ integer                 │ PRIMARY │
+# │ full_date    │ date                    │ NOT NULL│
+# │ day_number   │ integer                 │         │
+# │ day_name     │ character varying(20)   │         │
+# │ week_number  │ integer                 │         │
+# │ month_number │ integer                 │         │
+# │ month_name   │ character varying(20)   │         │
+# │ quarter_number│ integer                │         │
+# │ year_number  │ integer                 │         │
+# │ is_weekend   │ character(1)            │         │
+# └──────────────┴─────────────────────────┴─────────┘
+
+cubes:
+  - name: Calendar
+    sql_table: calendar_dim
+    description: Date dimension with day, week, month, quarter, year.
+    
+    dimensions:
+      - name: calendar_id
+        sql: calendar_id
+        type: string
+        primary_key: true
+      
+      - name: full_date
+        sql: full_date
+        type: time
+
+      - name: day
+        sql: day_number
+        type: number
+
+      - name: day_name
+        sql: day_name
+        type: string
+      
+      - name: week_number
+        sql: week_number
+        type: number
+
+      - name : month_number
+        sql: month_number
+        type:  number
+
+      - name: month
+        sql: month_name
+        type: string
+
+      - name: quarter_number
+        sql: quarter_number
+        type: number
+      
+      - name: year
+        sql: year_number
+        type: number
+      
+      - name: is_weekend
+        sql: is_weekend
+        type: string

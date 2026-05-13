@@ -1,0 +1,72 @@
+# Table Name: inventory_risk_flags
+# ┌────────────────────┬─────────────────────────┬─────────┐
+# │ Column             │ Data Type               │ Key     │
+# ├────────────────────┼─────────────────────────┼─────────┤
+# │ risk_flag_id       │ character varying(50)   │ PRIMARY │
+# │ location_sk        │ character varying(50)   │ FK      │
+# │ product_id         │ character varying(50)   │ FK      │
+# │ risk_indicator     │ character varying(50)   │         │
+# │ risk_level         │ character varying(20)   │         │
+# │ trigger_date       │ date                    │         │
+# │ current_quantity   │ numeric(18,4)           │         │
+# │ recommended_action │ text                    │         │
+# │ escalation_status  │ character varying(20)   │         │
+# │ record_source      │ character varying(50)   │         │
+# └────────────────────┴─────────────────────────┴─────────┘
+
+cubes:
+  - name: InventoryRisk
+    sql_table: inventory_risk_flags
+    description: Inventory risk indicators and recommended actions for products by location
+
+    dimensions:
+      - name: risk_flag_id
+        sql: risk_flag_id
+        type: string
+        primary_key: true
+
+      - name: location_sk
+        sql: location_sk
+        type: string
+
+      - name: product_id
+        sql: product_id
+        type: string
+
+      - name: risk_indicator
+        sql: risk_indicator
+        type: string
+
+      - name: risk_level
+        sql: risk_level
+        type: string
+
+      - name: trigger_date
+        sql: trigger_date
+        type: time
+
+      - name: current_quantity
+        sql: current_quantity
+        type: number
+
+      - name: recommended_action
+        sql: recommended_action
+        type: string
+
+      - name: escalation_status
+        sql: escalation_status
+        type: string
+
+      - name: record_source
+        sql: record_source
+        type: string
+
+    joins:
+      - name: Location
+        sql: "{InventoryRisk}.location_id = {Location}.location_id"
+        relationship: many_to_one
+
+      - name: Product
+        sql: "{InventoryRisk}.product_id = {Product}.product_id"
+        relationship: many_to_one
+

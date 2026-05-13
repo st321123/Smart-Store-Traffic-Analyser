@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+
+# Cube Store
+.cubestore/
+
+# Build folders
+dist/
+build/
+.next/
+out/
+
+# Environment variables
+.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Coverage
+coverage/
+
+# Vite
+.vite/

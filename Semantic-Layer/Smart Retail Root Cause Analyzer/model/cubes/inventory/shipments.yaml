@@ -1,0 +1,171 @@
+# Table Name: shipment_header
+# ┌────────────────────────┬─────────────────────────────┬─────────┐
+# │ Column                 │ Data Type                   │ Key     │
+# ├────────────────────────┼─────────────────────────────┼─────────┤
+# │ shipment_id            │ character varying(50)       │ PRIMARY │
+# │ shipment_number        │ character varying(50)       │         │
+# │ shipment_type          │ character varying(50)       │         │
+# │ source_location_id     │ character varying(50)       │ FK      │
+# │ destination_location_id│ character varying(50)       │ FK      │
+# │ supplier_id            │ character varying(50)       │ FK      │
+# │ shipment_status        │ character varying(30)       │         │
+# │ carrier_name           │ character varying(100)      │         │
+# │ tracking_number        │ character varying(100)      │         │
+# │ shipped_date           │ date                        │         │
+# │ expected_delivery_date │ date                        │         │
+# │ delivered_date         │ date                        │         │
+# │ total_weight           │ numeric(18,2)               │         │
+# │ total_cost             │ numeric(18,2)               │         │
+# │ created_ts             │ timestamp without time zone │         │
+# └────────────────────────┴─────────────────────────────┴─────────┘
+# Table Name: shipment_line_items
+# ┌────────────────────┬─────────────────────────────┬─────────┐
+# │ Column             │ Data Type                   │ Key     │
+# ├────────────────────┼─────────────────────────────┼─────────┤
+# │ shipment_line_id   │ character varying(50)       │ PRIMARY │
+# │ shipment_id        │ character varying(50)       │ FK      │
+# │ product_id         │ character varying(50)       │ FK      │
+# │ sku_id             │ character varying(50)       │         │
+# │ quantity_shipped   │ numeric(18,2)               │         │
+# │ quantity_received  │ numeric(18,2)               │         │
+# │ unit_cost          │ numeric(18,2)               │         │
+# │ line_amount        │ numeric(18,2)               │         │
+# │ created_ts         │ timestamp without time zone │         │
+# └────────────────────┴─────────────────────────────┴─────────┘
+
+cubes:
+  - name: Shipments
+    sql: >
+      SELECT
+        sh.shipment_id,
+        sh.shipment_number,
+        sh.shipment_type,
+        sh.source_location_id,
+        sh.destination_location_id,
+        sh.supplier_id,
+        sh.shipment_status,
+        sh.carrier_name,
+        sh.tracking_number,
+        sh.shipped_date,
+        sh.expected_delivery_date,
+        sh.delivered_date,
+        sh.total_weight,
+        sh.total_cost,
+        sh.created_ts AS shipment_created_ts,
+
+        sl.shipment_line_id,
+        sl.product_id,
+        sl.sku_id,
+        sl.quantity_shipped,
+        sl.quantity_received,
+        sl.unit_cost,
+        sl.line_amount,
+        sl.created_ts AS line_created_ts
+
+      FROM shipment_header sh
+      LEFT JOIN shipment_line_items sl
+        ON sh.shipment_id = sl.shipment_id
+
+    description: Combined shipment header and shipment line item details
+
+    dimensions:
+      - name: shipment_id
+        sql: shipment_id
+        type: string
+        primary_key: true
+
+      - name: shipment_number
+        sql: shipment_number
+        type: string
+
+      - name: shipment_type
+        sql: shipment_type
+        type: string
+
+      - name: source_location_id
+        sql: source_location_id
+        type: string
+
+      - name: destination_location_id
+        sql: destination_location_id
+        type: string
+
+      - name: supplier_id
+        sql: supplier_id
+        type: string
+
+      - name: shipment_status
+        sql: shipment_status
+        type: string
+
+      - name: carrier_name
+        sql: carrier_name
+        type: string
+
+      - name: tracking_number
+        sql: tracking_number
+        type: string
+
+      - name: shipped_date
+        sql: shipped_date
+        type: time
+
+      - name: expected_delivery_date
+        sql: expected_delivery_date
+        type: time
+
+      - name: delivered_date
+        sql: delivered_date
+        type: time
+
+      - name: total_weight
+        sql: total_weight
+        type: number
+
+      - name: total_cost
+        sql: total_cost
+        type: number
+
+      - name: shipment_created_ts
+        sql: shipment_created_ts
+        type: time
+
+      - name: shipment_line_id
+        sql: shipment_line_id
+        type: string
+
+      - name: product_id
+        sql: product_id
+        type: string
+
+      - name: sku_id
+        sql: sku_id
+        type: string
+
+      - name: quantity_shipped
+        sql: quantity_shipped
+        type: number
+
+      - name: quantity_received
+        sql: quantity_received
+        type: number
+
+      - name: unit_cost
+        sql: unit_cost
+        type: number
+
+      - name: line_amount
+        sql: line_amount
+        type: number
+
+      - name: line_created_ts
+        sql: line_created_ts
+        type: time
+
+    joins:
+      - name: Supplier
+        sql: "{Shipments}.supplier_id = {Supplier}.supplier_id"
+        relationship: many_to_one
+      - name: Product
+        sql: "{Shipments}.product_id = {Product}.product_id"
+        relationship: many_to_one

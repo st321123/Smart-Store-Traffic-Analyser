@@ -1,0 +1,72 @@
+# Table Name: inventory_balance_ledger
+# ┌─────────────────────────────┬─────────────────────────────┬─────────┐
+# │ Column                      │ Data Type                   │ Key     │
+# ├─────────────────────────────┼─────────────────────────────┼─────────┤
+# │ inventory_transaction_id    │ character varying(50)       │ PRIMARY │
+# │ product_id                  │ character varying(50)       │ FK      │
+# │ location_id                 │ character varying(50)       │ FK      │
+# │ movement_type_cd            │ character varying(30)       │ NOT NULL│
+# │ quantity                    │ numeric(18,4)               │         │
+# │ movement_value              │ numeric(18,4)               │         │
+# │ transaction_datetime        │ timestamp without time zone │ NOT NULL│
+# │ reference_document_id       │ character varying(100)      │         │
+# │ reference_document_type_cd  │ character varying(50)       │         │
+# │ record_source               │ character varying(100)      │         │
+# └─────────────────────────────┴─────────────────────────────┴─────────┘
+
+cubes:
+  - name: InventoryLedger
+    sql_table: inventory_balance_ledger
+    description: Ledger of inventory stock movements and valuation transactions
+
+    dimensions:
+      - name: inventory_transaction_id
+        sql: inventory_transaction_id
+        type: string
+        primary_key: true
+
+      - name: product_id
+        sql: product_id
+        type: string
+
+      - name: location_id
+        sql: location_id
+        type: string
+
+      - name: movement_type_cd
+        sql: movement_type_cd
+        type: string
+
+      - name: quantity
+        sql: quantity
+        type: number
+
+      - name: movement_value
+        sql: movement_value
+        type: number
+
+      - name: transaction_datetime
+        sql: transaction_datetime
+        type: time
+
+      - name: reference_document_id
+        sql: reference_document_id
+        type: string
+
+      - name: reference_document_type_cd
+        sql: reference_document_type_cd
+        type: string
+
+      - name: record_source
+        sql: record_source
+        type: string
+
+
+    joins:
+      - name: Location
+        sql: "{InventoryLedger}.location_id = {Location}.location_id"
+        relationship: many_to_one
+
+      - name: Product
+        sql: "{InventoryLedger}.product_id = {Product}.product_id"
+        relationship: many_to_one

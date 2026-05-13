@@ -1,0 +1,137 @@
+# Table Name: purchase_order_header
+# ┌──────────────────────┬─────────────────────────────┬─────────┐
+# │ Column               │ Data Type                   │ Key     │
+# ├──────────────────────┼─────────────────────────────┼─────────┤
+# │ po_id                │ character varying(50)       │ PRIMARY │
+# │ supplier_id          │ character varying(50)       │ FK      │
+# │ po_date              │ date                        │         │
+# │ expected_delivery_date│ date                       │         │
+# │ location_id          │ character varying(50)       │ FK      │
+# │ po_status            │ character varying(30)       │         │
+# │ total_amount         │ numeric(18,2)               │         │
+# │ created_by           │ character varying(50)       │         │
+# │ created_ts           │ timestamp without time zone │         │
+# └──────────────────────┴─────────────────────────────┴─────────┘
+
+
+
+
+# Table Name: purchase_order_line
+# ┌──────────────┬─────────────────────────────┬─────────┐
+# │ Column       │ Data Type                   │ Key     │
+# ├──────────────┼─────────────────────────────┼─────────┤
+# │ po_line_id   │ character varying(50)       │ PRIMARY │
+# │ po_id        │ character varying(50)       │ FK      │
+# │ product_id   │ character varying(50)       │ FK      │
+# │ ordered_qty  │ numeric(18,2)               │         │
+# │ received_qty │ numeric(18,2)               │         │
+# │ unit_cost    │ numeric(18,2)               │         │
+# │ line_amount  │ numeric(18,2)               │         │
+# │ created_ts   │ timestamp without time zone │         │
+
+cubes:
+  - name: PurchaseOrders
+    sql: >
+      SELECT
+        poh.po_id,
+        poh.supplier_id,
+        poh.po_date,
+        poh.expected_delivery_date,
+        poh.location_id,
+        poh.po_status,
+        poh.total_amount,
+        poh.created_by,
+        poh.created_ts AS po_created_ts,
+
+        pol.po_line_id,
+        pol.product_id,
+        pol.ordered_qty,
+        pol.received_qty,
+        pol.unit_cost,
+        pol.line_amount,
+        pol.created_ts AS line_created_ts
+
+      FROM purchase_order_header poh
+      LEFT JOIN purchase_order_line pol
+        ON poh.po_id = pol.po_id
+
+    description: Combined purchase order header and line item details
+
+    dimensions:
+      - name: po_id
+        sql: po_id
+        type: string
+        primary_key: true
+
+      - name: supplier_id
+        sql: supplier_id
+        type: string
+
+      - name: po_date
+        sql: po_date
+        type: time
+
+      - name: expected_delivery_date
+        sql: expected_delivery_date
+        type: time
+
+      - name: location_id
+        sql: location_id
+        type: string
+
+      - name: po_status
+        sql: po_status
+        type: string
+
+      - name: total_amount
+        sql: total_amount
+        type: number
+
+      - name: created_by
+        sql: created_by
+        type: string
+
+      - name: po_created_ts
+        sql: po_created_ts
+        type: time
+
+      - name: po_line_id
+        sql: po_line_id
+        type: string
+
+      - name: product_id
+        sql: product_id
+        type: string
+
+      - name: ordered_qty
+        sql: ordered_qty
+        type: number
+
+      - name: received_qty
+        sql: received_qty
+        type: number
+
+      - name: unit_cost
+        sql: unit_cost
+        type: number
+
+      - name: line_amount
+        sql: line_amount
+        type: number
+
+      - name: line_created_ts
+        sql: line_created_ts
+        type: time
+
+    joins:
+      - name: Supplier
+        sql: "{PurchaseOrders}.supplier_id = {Supplier}.supplier_id"
+        relationship: many_to_one
+
+      - name: Location
+        sql: "{PurchaseOrders}.location_id = {Location}.location_id"
+        relationship: many_to_one
+
+      - name: Product
+        sql: "{PurchaseOrders}.product_id = {Product}.product_id"
+        relationship: many_to_one

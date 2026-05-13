@@ -1,0 +1,44 @@
+# Table Name: store_traffic_counts
+# ┌────────────────┬─────────────────────────┬─────────┐
+# │ Column         │ Data Type               │ Key     │
+# ├────────────────┼─────────────────────────┼─────────┤
+# │ traffic_id     │ character varying(50)   │ PRIMARY │
+# │ location_id    │ character varying(50)   │ FK      │
+# │ traffic_date   │ date                    │         │
+# │ visitor_count  │ integer                 │         │
+# │ conversion_rate│ numeric(5,2)            │         │
+# └────────────────┴─────────────────────────┴─────────┘
+
+
+cubes: 
+  - name: StoreTraffic
+    sql_table: store_traffic_counts
+    description: Store traffic counts with visitor data and conversion
+
+    dimensions:
+      - name: traffic_id
+        sql: traffic_id
+        type: string
+        primary_key: true
+      
+      - name: location_id
+        sql: location_id
+        type: string
+
+      - name: traffic_date
+        sql: traffic_date
+        type: time
+      
+      - name: visitor_count
+        sql: visitor_count
+        type: number
+      
+      - name: conversion_rate
+        sql: conversion_rate
+        type: number
+
+
+    joins:
+      - name: Location
+        sql: "{StoreTraffic}.location_id = {Location}.location_id"
+        relationship: many_to_one
