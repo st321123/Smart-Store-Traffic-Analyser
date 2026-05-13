@@ -29,15 +29,28 @@ cubes:
         sql: traffic_date
         type: time
       
-      - name: visitor_count
+
+    measures:
+      - name: total_visits
         sql: visitor_count
-        type: number
-      
-      - name: conversion_rate
+        type: sum
+
+      - name: avg_daily_traffic
+        sql: visitor_count
+        type: avg
+
+      - name: peak_traffic
+        sql: visitor_count
+        type: max
+
+      - name: average_conversion_rate
         sql: conversion_rate
-        type: number
-
-
+        type: avg
+        
+      - name: traffic_days
+        sql: traffic_date
+        type: count_distinct
+      
     joins:
       - name: Location
         sql: "{StoreTraffic}.location_id = {Location}.location_id"

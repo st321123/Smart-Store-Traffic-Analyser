@@ -61,7 +61,17 @@ cubes:
         sql: record_source
         type: string
 
-
+    measures:
+      - name: total_quantity 
+        sql: quantity
+        type: sum
+      - name: total_movement_value
+        sql: movement_value
+        type: sum
+      - name: movement_count
+        sql: inventory_transaction_id
+        type: count
+        
     joins:
       - name: Location
         sql: "{InventoryLedger}.location_id = {Location}.location_id"

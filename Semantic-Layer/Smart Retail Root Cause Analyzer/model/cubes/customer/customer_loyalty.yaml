@@ -69,7 +69,15 @@ cubes:
       - name: total_points_redeemed
         sql: points_redeemed
         type: sum
-    
+      - name: avg_points_balance
+        sql: points_balance
+        type: avg
+      - name: loyalty_txn_count
+        sql: loyalty_transaction_id
+        type: count
+      - name: avg_points_earned
+        sql: points_earned
+        type: avg
     joins:
       - name: Customers
         sql: "{CustomerLoyalty}.customer_id ={Customers}.customer_id "

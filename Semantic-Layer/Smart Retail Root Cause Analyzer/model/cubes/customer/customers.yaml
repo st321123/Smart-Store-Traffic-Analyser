@@ -61,3 +61,8 @@ cubes:
       - name: join_date
         sql: join_date
         type: time
+      
+    measures:
+      - name: customer_count
+        sql: customer_id
+        type: count_distinct

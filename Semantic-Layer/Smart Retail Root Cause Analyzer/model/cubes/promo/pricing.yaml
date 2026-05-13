@@ -45,6 +45,24 @@ cubes:
         sql: effective_end_dt
         type: time
 
+    measures:
+      - name: avg_regular_price 
+        sql: regular_price
+        type: avg
+      - name: avg_selling_price
+        sql: selling_price
+        type: avg
+      - name: max_regular_price
+        sql: regular_price
+        type: max
+
+      - name: min_selling_price
+        sql: selling_price
+        type: min
+      - name: total_price_records
+        sql: price_id
+        type: count 
+
     joins:
       - name: Location
         sql: "{Pricing}.location_id = {Location}.location_id"

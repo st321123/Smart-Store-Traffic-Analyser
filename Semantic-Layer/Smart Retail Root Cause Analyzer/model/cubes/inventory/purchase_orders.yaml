@@ -123,6 +123,9 @@ cubes:
         sql: line_created_ts
         type: time
 
+    measures:
+    
+
     joins:
       - name: Supplier
         sql: "{PurchaseOrders}.supplier_id = {Supplier}.supplier_id"

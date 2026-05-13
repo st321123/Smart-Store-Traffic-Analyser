@@ -29,17 +29,22 @@ cubes:
         sql: sales_date
         type: time
 
+    measures:
+
       - name: total_sales_amt
         sql: total_sales_amt
-        type: number
+        type: sum
 
       - name: total_transactions
         sql: total_transactions
-        type: number
+        type: sum
 
       - name: total_units_sold
         sql: total_units_sold
-        type: number
+        type: sum
+      - name: avg_daily_sales
+        sql: total_sales_amt
+        type: avg
 
     joins:
       - name: Location

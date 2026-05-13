@@ -44,6 +44,29 @@ cubes:
       - name: damaged_qty
         sql: damaged_qty
         type: number
+    measures:
+      - name : total_on_hand
+        sql: on_hand_qty
+        type: sum
+      - name: total_reserved
+        sql:  reserved_qty
+        type: sum
+      - name: total_damaged
+        sql:  damaged_qty
+        type:  sum
+      - name: available_stock
+        sql:  "on_hand_qty - reserved_qty - damaged_qty"
+        type: sum
+      - name: avg_on_hand
+        sql: on_hand_qty
+        type: avg
+
+      - name: snapshot_count
+        sql: snapshot_id
+        type: count 
+
+      
+
 
     joins:
       - name: Location

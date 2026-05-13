@@ -66,6 +66,24 @@ cubes:
         sql: created_ts
         type: time
 
+    measures:
+      - name: avg_rating
+        sql: rating
+        type: avg
+      - name: feedback_count
+        sql: feedback_id
+        type: count
+
+      - name: low_rating_count
+        type: count
+        filters:
+          - sql: "{CUBE}.rating <= 2"
+
+      - name: high_rating_count
+        type: count
+        filters:
+          - sql: "{CUBE}.rating >= 4"
+
     joins:
       - name: Location
         sql: "{Feedback}.store_id = {Location}.location_id"

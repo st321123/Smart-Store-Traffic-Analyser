@@ -61,6 +61,21 @@ cubes:
         sql: record_source
         type: string
 
+    measures:
+      - name: total_risk_flags
+        sql: risk_flag_id
+        type: count
+      - name: distinct_products_at_risk
+        sql: product_id
+        type: count_distinct
+      - name: distinct_locations_at_risk
+        sql: location_sk
+        type: count_distinct
+
+      - name: avg_risk_quantity
+        sql: current_quantity
+        type: avg
+
     joins:
       - name: Location
         sql: "{InventoryRisk}.location_id = {Location}.location_id"

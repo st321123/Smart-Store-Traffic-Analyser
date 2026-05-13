@@ -61,7 +61,28 @@ cubes:
       - name: created_ts
         sql: created_ts
         type: time
+    measures:
+      - name: avg_product_rating
+        sql: rating
+        type: avg
+      - name: review_count
+        sql: review_id
+        type: count
+      - name: total_helpful_votes
+        sql: helpful_votes
+        type: sum
+      - name: low_review_count
+        sql: review_id
+        type: count
+        filters:
+          - sql: "{CUBE}.rating <= 2"
 
+      - name: high_review_count
+        sql: review_id
+        type: count
+        filters:
+          - sql: "{CUBE}.rating >= 4"
+        
     joins: 
       - name: Product
         sql: "{ProductReviews}.product_id = {Product}.product_id"

@@ -73,7 +73,17 @@ cubes:
       - name: product_id
         sql: product_id
         type: string
-
+    measures:
+      - name: promo_count
+        sql: promo_id
+        type: count_distinct
+      - name: avg_discount_pct
+        sql: discount_pct
+        type: avg
+      - name: products_on_promo
+        sql: product_id
+        type: count_distinct
+        
     joins:
       - name: Product
         sql: "{Promotions}.product_id = {Product}.product_id"

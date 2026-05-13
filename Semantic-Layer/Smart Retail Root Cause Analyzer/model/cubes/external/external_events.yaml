@@ -52,6 +52,13 @@ cubes:
         sql: updated_at
         type: time
 
+    measures: 
+      - name: event_count
+        sql: event_id
+        type: count
+      - name: distinct_event_types
+        sql: event_type
+        type: count_distinct
     joins:
       - name: Location
         sql: "{ExternalEvents}.store_id = {Location}.location_id"
