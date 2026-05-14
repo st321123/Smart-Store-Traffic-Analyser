@@ -31,7 +31,7 @@ cubes:
 
     measures:
 
-      - name: total_sales_amt
+      - name: total_sales
         sql: total_sales_amt
         type: sum
 

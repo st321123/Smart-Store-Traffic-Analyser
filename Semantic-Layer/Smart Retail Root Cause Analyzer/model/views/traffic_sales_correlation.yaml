@@ -1,0 +1,24 @@
+views:
+  - name: TrafficSalesCorrelation 
+    description: Correlates store traffic with daily sales for conversion analysis.
+
+    cubes:
+      - join_path: StoreTraffic
+        includes:
+          - traffic_date
+          - total_visits  
+          - avg_daily_traffic
+          - avg_conversion_rate
+
+      - join_path: StoreTraffic.Location
+        includes:
+          - location_name
+          - city
+          - region
+          - store_type
+
+      - join_path: SalesDaily
+        includes:
+          - total_sales
+          - total_transactions
+          - total_units_sold

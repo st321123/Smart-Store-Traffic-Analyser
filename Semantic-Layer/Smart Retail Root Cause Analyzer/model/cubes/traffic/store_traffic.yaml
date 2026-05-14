@@ -43,7 +43,7 @@ cubes:
         sql: visitor_count
         type: max
 
-      - name: average_conversion_rate
+      - name: avg_conversion_rate
         sql: conversion_rate
         type: avg
         

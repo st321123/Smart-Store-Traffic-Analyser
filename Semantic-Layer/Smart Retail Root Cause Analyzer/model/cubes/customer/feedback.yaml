@@ -67,6 +67,7 @@ cubes:
         type: time
 
     measures:
+    
       - name: avg_rating
         sql: rating
         type: avg

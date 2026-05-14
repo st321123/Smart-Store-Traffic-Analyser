@@ -1,0 +1,28 @@
+views:
+  - name: PromoEffectiveness
+    description: Promotion effectiveness - links promos to pricing.
+    
+
+    cubes: 
+      - join_path: Promotions
+        includes:
+          - promo_name
+          - promo_type
+          - start_date
+          - end_date
+          - discount_pct
+          - promo_count
+          - products_on_promo
+          - avg_discount_pct
+      
+      - join_path: Promotions.Product
+        includes:
+          - product_name
+          - brand_name
+          - department_name
+          - category_name
+        
+      - join_path: Pricing
+        includes:
+          - avg_regular_price
+          - avg_selling_price

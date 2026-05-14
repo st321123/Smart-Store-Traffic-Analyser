@@ -1,0 +1,32 @@
+views: 
+  - name: CustomerSentimentOverview
+    description: Customer sentiment - store feedback and product reviews combined.
+
+    cubes: 
+      - join_path: Feedback
+        includes: 
+          - feedback_date
+          - feedback_category
+          - avg_rating
+          - feedback_count
+          - low_rating_count
+          - high_rating_count
+        
+      - join_path: Feedback.Customers
+        includes: 
+          - loyalty_status
+        
+      - join_path: ProductReviews
+        includes:
+          - avg_product_rating
+          - review_count
+          - total_helpful_votes
+          - low_review_count
+          - high_review_count
+
+      - join_path: ProductReviews.Product
+        includes:
+          - product_name
+          - brand_name
+          - department_name
+          - category_name

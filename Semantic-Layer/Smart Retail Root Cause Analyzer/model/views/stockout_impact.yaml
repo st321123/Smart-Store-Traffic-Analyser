@@ -1,0 +1,34 @@
+views:
+  - name: StockoutImpact
+    description: Links inventory risk flags with stock levels.
+
+
+    cubes: 
+      - join_path: InventoryRisk
+        includes:
+          - risk_indicator
+          - risk_level
+          - trigger_date
+          - escalation_status
+          - total_risk_flags
+          - distinct_products_at_risk
+
+      - join_path: InventoryRisk.Product
+        includes:
+          - product_name
+          - brand_name
+          - department_name
+          - category_name
+
+      - join_path: InventoryRisk.Location
+        includes:
+          - location_name
+          - city
+          - region
+
+      - join_path: Inventory
+        includes:
+          - total_on_hand
+          - total_reserved
+          - total_damaged
+          - available_stock

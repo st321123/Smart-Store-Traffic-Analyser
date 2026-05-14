@@ -61,6 +61,7 @@ cubes:
       - name: created_ts
         sql: created_ts
         type: time
+        
     measures:
       - name: avg_product_rating
         sql: rating
