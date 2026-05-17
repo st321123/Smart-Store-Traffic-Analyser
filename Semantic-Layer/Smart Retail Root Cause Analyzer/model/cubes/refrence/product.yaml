@@ -52,10 +52,6 @@ cubes:
         type: string
         primary_key: true
 
-      - name: hierarchy_id
-        sql: hierarchy_id
-        type: string
-
       - name: product_name
         sql: product_name
         type: string
@@ -99,3 +95,8 @@ cubes:
       - name: subcategory_name
         sql: subcategory_name
         type: string
+
+    measures:
+      - name: product_count
+        sql: product_id
+        type: count_distinct

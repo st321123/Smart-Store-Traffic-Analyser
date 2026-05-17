@@ -58,7 +58,7 @@ cubes:
         sl.sku_id,
         sl.quantity_shipped,
         sl.quantity_received,
-        sl.unit_cost,
+        sl.unit_cost AS line_unit_cost,
         sl.line_amount,
         sl.created_ts AS line_created_ts
 
@@ -69,10 +69,15 @@ cubes:
     description: Combined shipment header and shipment line item details
 
     dimensions:
+      - name: shipment_line_id
+        sql: shipment_line_id
+        type: string
+        primary_key: true
+
       - name: shipment_id
         sql: shipment_id
         type: string
-        primary_key: true
+
 
       - name: shipment_number
         sql: shipment_number
@@ -118,49 +123,39 @@ cubes:
         sql: delivered_date
         type: time
 
-      - name: total_weight
-        sql: total_weight
-        type: number
-
-      - name: total_cost
-        sql: total_cost
-        type: number
-
-      - name: shipment_created_ts
-        sql: shipment_created_ts
-        type: time
-
-      - name: shipment_line_id
-        sql: shipment_line_id
-        type: string
-
       - name: product_id
         sql: product_id
         type: string
-
       - name: sku_id
         sql: sku_id
         type: string
 
-      - name: quantity_shipped
+    measures:
+
+      - name: total_shipped_qty
         sql: quantity_shipped
-        type: number
+        type: sum
 
-      - name: quantity_received
+      - name: total_received_qty
         sql: quantity_received
-        type: number
+        type: sum
 
-      - name: unit_cost
-        sql: unit_cost
-        type: number
+      - name: total_shipment_cost
+        sql: total_cost
+        type: sum
 
-      - name: line_amount
+      - name: total_line_amount
         sql: line_amount
-        type: number
+        type: sum
 
-      - name: line_created_ts
-        sql: line_created_ts
-        type: time
+      - name: avg_line_unit_cost
+        sql: line_unit_cost
+        type: avg
+
+      - name: shipment_count
+        sql: shipment_id
+        type: count_distinct
+
 
     joins:
       - name: Supplier

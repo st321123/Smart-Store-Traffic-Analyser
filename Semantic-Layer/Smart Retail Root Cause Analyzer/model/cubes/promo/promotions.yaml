@@ -41,10 +41,15 @@ cubes:
     description: Combined promotion header and product mapping details
 
     dimensions:
+      - name: promo_mapping_id
+        sql: promo_mapping_id
+        type: string
+        primary_key: true
+
       - name: promo_id
         sql: promo_id
         type: string
-        primary_key: true
+        
 
       - name: promo_name
         sql: promo_name
@@ -65,14 +70,10 @@ cubes:
       - name: discount_pct
         sql: discount_pct
         type: number
-
-      - name: promo_mapping_id
-        sql: promo_mapping_id
-        type: string
-
       - name: product_id
         sql: product_id
         type: string
+        
     measures:
       - name: promo_count
         sql: promo_id

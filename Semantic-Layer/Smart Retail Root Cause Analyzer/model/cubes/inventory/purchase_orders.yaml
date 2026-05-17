@@ -39,7 +39,7 @@ cubes:
         poh.expected_delivery_date,
         poh.location_id,
         poh.po_status,
-        poh.total_amount,
+        poh.total_amount as po_total_amount,
         poh.created_by,
         poh.created_ts AS po_created_ts,
 
@@ -83,10 +83,6 @@ cubes:
         sql: po_status
         type: string
 
-      - name: total_amount
-        sql: total_amount
-        type: number
-
       - name: created_by
         sql: created_by
         type: string
@@ -123,8 +119,31 @@ cubes:
         sql: line_created_ts
         type: time
 
+
+
     measures:
-    
+      - name: total_po_amount
+        sql: po_total_amount
+        type: sum
+
+
+      - name: po_count
+        sql: po_id
+        type: count_distinct
+
+
+      - name: total_ordered_qty
+        sql: ordered_qty
+        type: sum
+
+
+      - name: total_recieved_qty
+        sql: received_qty
+        type: sum
+
+      - name: total_line_amount
+        sql: line_amount
+        type: sum
 
     joins:
       - name: Supplier
@@ -138,3 +157,5 @@ cubes:
       - name: Product
         sql: "{PurchaseOrders}.product_id = {Product}.product_id"
         relationship: many_to_one
+
+

@@ -29,14 +29,6 @@ cubes:
         sql: location_id
         type: string
 
-      - name: regular_price
-        sql: regular_price
-        type: number
-
-      - name: selling_price
-        sql: selling_price
-        type: number
-
       - name: effective_start_dt
         sql: effective_start_dt
         type: time
