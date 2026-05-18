@@ -54,10 +54,22 @@ cubes:
       - name: payment_datetime
         sql: payment_datetime
         type: time
+        
+    measures:
+      - name: total_payment
+        sql: payment_amount
+        type: sum
 
+      - name: payment_count
+        sql: payment_transaction_id
+        type: count
+
+      - name: avg_payment
+        sql: payment_amount
+        type: avg
     joins:
-      - name: POSTranscations
-        sql: "{Payments}.pos_transaction_id = {POSTranscations}.pos_transaction_id"
+      - name: POSTransactions
+        sql: "{Payments}.pos_transaction_id = {POSTransactions}.pos_transaction_id"
         relationship: many_to_one 
 
 

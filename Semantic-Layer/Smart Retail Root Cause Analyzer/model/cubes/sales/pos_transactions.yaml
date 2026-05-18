@@ -22,7 +22,7 @@
 # └─────────────────────┴─────────────────────────────┴─────────┘
 
 cubes:
-  - name: POSTranscations
+  - name: POSTransactions
     sql_table: pos_transaction_header
     description: POS transaction header details including payment and sales information
 
@@ -64,39 +64,46 @@ cubes:
         sql: payment_method
         type: string
 
-      - name: subtotal_amount
+      - name: status_cd
+        sql: status_cd
+        type: string 
+
+
+    measures:
+
+      - name: total_subtotal
         sql: subtotal_amount
-        type: number
+        type: sum
 
-      - name: discount_amount
+      - name: total_discount
         sql: discount_amount
-        type: number
+        type: sum
 
-      - name: tax_amount
+      - name: total_tax
         sql: tax_amount
-        type: number
+        type: sum
 
       - name: total_amount
         sql: total_amount
-        type: number
+        type: sum
 
-      - name: item_count
+      - name: total_items
         sql: item_count
-        type: number
+        type: sum
 
-      - name: status_cd
-        sql: status_cd
-        type: string
+      - name: transaction_count
+        sql: pos_transaction_id
+        type: count_distinct
 
-      - name: created_ts
-        sql: created_ts
-        type: time
+      - name: avg_transaction_value
+        sql: total_amount
+        type: avg
 
     joins:
       - name: Location
-        sql: "{POSTranscations}.store_id = {Location}.location_id"
+        sql: "{POSTransactions}.store_id = {Location}.location_id"
         relationship: many_to_one
 
       - name: Customers
-        sql: "{POSTranscations}.customer_id = {Customers}.customer_id"
+        sql: "{POSTransactions}.customer_id = {Customers}.customer_id"
         relationship: many_to_one

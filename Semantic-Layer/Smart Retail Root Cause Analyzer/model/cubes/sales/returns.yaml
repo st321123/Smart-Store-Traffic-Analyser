@@ -152,6 +152,20 @@ cubes:
         sql: refund_transaction_id
         type: string
 
+    measures:
+    
+      - name: return_count
+        sql: return_header_id
+        type: count_distinct
+
+      - name: total_refund
+        sql: refund_amount
+        type: sum
+
+      - name: avg_refund
+        sql: refund_amount
+        type: avg
+
     joins:
       - name: Customers
         sql: "{Returns}.customer_id ={Customers}.customer_id "

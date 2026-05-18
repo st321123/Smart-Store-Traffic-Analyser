@@ -1,0 +1,140 @@
+"""
+Traffic Analyst - RCA Domain Agent #1
+Analyzes stores traffic patterns, anomalies, and trends.
+
+CUBES: StoreTraffic, Calendar, Location
+"""
+
+
+import json 
+import os 
+from langchain_openai import AzureChatOpenAI
+from agents.state import ChatState, AgentFinding
+from tools.cubejs_client import query_cubejs, format_cubejs_response
+
+llm = AzureChatOpenAI(
+    azure_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
+    azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"),
+    api_key = os.getenv("AZURE_OPENAI_API_KEY"),
+    api_version = os.getenv("AZURE_OPENAI_API_VERSION"),
+    temperature = 0
+)
+
+TRAFFIC_PROMPT = """ You are a retail traffic analyst performing root cause analysis.
+
+AVAILABLE CUBES:
+- StoreTraffic : total_visits, avg_daily_traffic, peak_traffic, avg_conversion_rate, traffic_days(measures)
+  Dimensions: location_id, traffic_date
+
+- Calendar: full_date, day_name, day_number, week_number, month_name, month_number, quarter_number, year_number, is_weekend
+  
+
+- Location: location_id, location_name, city, state, country, region, store_type
+  
+  
+
+USER QUESTION: {user_query}
+ENTITIES: {entities}
+
+YOUR TASK:
+1. Build Cube.js queries to investigate traffic patterns.
+2. Compare current period vs prior period
+3. Idenify which days/hours had the biggest drops
+4. Compare the store against peers in the same region 
+
+Generate 2-4 Cube.js queries as a JSON array. Each query should investigate a different angle. Example:
+[
+    {{"measures":["StoreTraffic.total_visits"],"dimensions":["StoreTraffic.traffic_date"]}},
+    {{"measures":["StoreTraffic.avg_daily_traffic"],"dimensions":["StoreTraffic.location_id"]}}
+]
+
+
+"""
+
+TRAFFIC_ANALYSIS_PROMPT = """ You are a traffic analyst. Based on the data below, 
+provide your finding for the root cause analysis.
+
+USER QUESTION :{user_query}
+DATA FROM QUERIES:
+{query_results}
+
+Respond in this JSON format:
+{{
+    "summary":"1-2 sentence summary of traffic finding",
+    "severity":"high|medium|low|none",
+    "metrics":{{
+              "current_traffic":0,
+              "prior_traffic":0,
+              "change_pct": 0,
+              "worst_days":[],
+              "worst_hours":[]
+                
+                }},
+    "evidence": ["specific data point 1", "specific data point 2"]
+
+}}
+
+"""
+
+
+async def traffic_analyst_node(state: ChatState) -> dict:
+    user_query = state["user_query"]
+    entities = state.get("entities",{})
+
+    query_response = await llm.ainvoke([
+        {"role":"system", "content":TRAFFIC_PROMPT.format(
+            user_query = user_query,
+            entities = json.dumps(entities),
+        )},
+        {"role":"user","content":" Generate the Cube.js queries."}
+    ])
+
+
+    try:
+        queries = json.loads(query_response.content)
+
+    except json.JSONDecodeError:
+        queries = []
+
+    results = []
+
+    for i,q in enumerate(queries[:4]):
+        try: 
+            raw = await query_cubejs(q)
+            data = format_cubejs_response(raw)
+            results.append({"query_index":i, "data":data[:30]})
+        except Exception as e:
+            results.append({"query_index":i, "error":str(e)})
+
+    analysis_response = await llm.ainvoke([
+        {
+            "role":"system",
+            "content": TRAFFIC_ANALYSIS_PROMPT.format(
+                user_query = user_query,
+                query_results = json.dumps(results, indent = 2)
+            )
+        },
+        {
+            "role":"user",
+            "content": "Provide your traffic analysis finding."
+        }])
+    
+   
+    try:
+        finding = json.loads(analysis_response.content)
+
+    except json.JSONDecodeError:
+        finding = {"summary": "Unable to analyse traffic data", "severity":"none","metrics":{}, "evidence":[]}
+         
+
+    return {
+        "findings": [ AgentFinding(
+            agent = "traffic_analyst",
+            summary = finding.get("summary",""),
+            severity = finding.get("severity", "none"),
+            metrics = finding.get("metrics",{}),
+            evidence = finding.get("evidence",[])
+        )
+
+        ]
+    }

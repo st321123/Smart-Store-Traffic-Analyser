@@ -38,6 +38,7 @@ cubes:
     description: Point of sales related information
 
     dimensions:
+
       - name: pos_line_item_id
         sql: pos_line_item_id
         type: string 
@@ -72,12 +73,29 @@ cubes:
       - name: product_description
         sql : product_description
         type: string 
+
       - name: uom_cd
         sql: uom_cd
         type: string 
       - name: line_type_cd
         sql: line_type_cd
         type: string
+
+      - name: promo_id
+        sql: promo_id
+        type: string 
+
+      - name: price_override_flag
+        sql: price_override_flag
+        type: string 
+
+
+
+
+      - name: tax_rate
+        sql: tax_rate
+        type: number
+
 
       - name: quantity
         sql: quantity
@@ -99,53 +117,62 @@ cubes:
         sql: discount_amt
         type: number
 
+      - name: is_gift_card
+        sql: is_gift_card
+        type: string 
+
       - name: tax_amt
         sql: tax_amt
-        type: number
-
-      - name: tax_rate
-        sql: tax_rate
-        type: number
-
-      - name: promo_id
-        sql: promo_id
-        type: string 
-
-      - name: line_total_amt
-        sql: line_total_amt
-        type: number
-
-      - name: price_override_flag
-        sql: price_override_flag
-        type: string 
-
-      - name: price_override_reason_cd
-        sql: price_override_reason_cd
-        type: string 
-
-      - name: price_override_authorized_by
-        sql: price_override_authorized_by
-        type: string 
-
-      - name: weight_kg
-        sql: weight_kg
         type: number
 
       - name : is_age_restricted
         sql: is_age_restricted
         type: string 
 
+
       - name: is_weighted_item
         sql: is_weighted_item
         type: string 
 
-      - name: is_gift_card
-        sql: is_gift_card
-        type: string 
+
+
+
+    measures:
+      - name: total_quantity
+        sql: quantity
+        type: sum
+
+      - name: total_revenue
+        sql: line_total_amt
+        type: sum
+      - name: total_extended_price
+        sql: extended_price
+        type: sum
+
+      - name: total_discount
+        sql: discount_amt
+        type: sum 
+      
+      - name: total_tax
+        sql: tax_amt
+        type: sum
+
+      - name: avg_unit_price
+        sql: unit_price
+        type: avg
+
+      - name: avg_selling_price
+        sql: selling_price
+        type: avg
+
+      - name: line_count 
+        sql: pos_line_item_id
+        type: count
+
 
     joins:
-      - name: POSTranscations
-        sql: "{POSLineItems}.pos_transaction_id = {POSTranscations}.pos_transaction_id"
+      - name: POSTransactions
+        sql: "{POSLineItems}.pos_transaction_id = {POSTransactions}.pos_transaction_id"
         relationship: many_to_one
 
       - name: Location
@@ -155,3 +182,6 @@ cubes:
       - name: Product
         sql: "{POSLineItems}.product_id = {Product}.product_id"
         relationship: many_to_one
+
+
+
