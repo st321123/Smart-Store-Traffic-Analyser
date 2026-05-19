@@ -25,12 +25,13 @@ TRAFFIC_PROMPT = """ You are a retail traffic analyst performing root cause anal
 AVAILABLE CUBES:
 - StoreTraffic : total_visits, avg_daily_traffic, peak_traffic, avg_conversion_rate, traffic_days(measures)
   Dimensions: location_id, traffic_date
-
-- Calendar: full_date, day_name, day_number, week_number, month_name, month_number, quarter_number, year_number, is_weekend
+  Joins: Location( via location_id)
   
 
-- Location: location_id, location_name, city, state, country, region, store_type
-  
+- Location: store_count(measures)
+  Dimensions: location_id, location_name, city, state, country, region, store_type
+
+  NOTE: Calendar cube is NOT joined to StoreTraffic. Do NOT use calendar dimensions.
   
 
 USER QUESTION: {user_query}
@@ -38,14 +39,19 @@ ENTITIES: {entities}
 
 YOUR TASK:
 1. Build Cube.js queries to investigate traffic patterns.
-2. Compare current period vs prior period
-3. Idenify which days/hours had the biggest drops
-4. Compare the store against peers in the same region 
+2. Use timeDimensions with traffic_date for date filtering and granularity
+3. Compare stores by using location dimensions (via StoreTraffic.Location.region etc.)
 
+
+RULES:
+- Only use measures/dimensions listed above
+- Do NOT use "compareDateRange" - use two seprate queries for comparison.
+- For date filtering, use timeDimensions (not filters on date fields)
+- For filteres, use this format : {{"member" : "CubeName.dimension", "operator":"equals", "values":["value"]}}
 Generate 2-4 Cube.js queries as a JSON array. Each query should investigate a different angle. Example:
 [
-    {{"measures":["StoreTraffic.total_visits"],"dimensions":["StoreTraffic.traffic_date"]}},
-    {{"measures":["StoreTraffic.avg_daily_traffic"],"dimensions":["StoreTraffic.location_id"]}}
+    {{"measures":["StoreTraffic.total_visits"],"timeDimensions":[{{"StoreTraffic.traffic_date", "granularity": "week"}}],.....}},
+    {{"measures":["StoreTraffic.total_visits"],"dimensions":["StoreTraffic.location_id"],"dimensions":["StoreTraffic.location_id"],"timeDimensions":[{{"dimension":"StoreTraffic.traffic_date", "dateRange": "Last 30 days"}}],.....}}
 ]
 
 
