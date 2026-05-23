@@ -43,12 +43,25 @@ AVAILABLE CUBES:
 USER QUESTION: {user_query}
 ENTITIES: {entities}
 
+STRICT RULES: 
+- Only use the exact measure/dimension names listed above. Copy-paste them exactly.
+- DO NOT invent measure names - only use what's listed.
+- Never user filters with "operator": "beforeDate" or "values": ["now"] - this causes "invalid date" errors
+
+DATE HANDLING (MANDATORY FORMAT):
+Use timeDimensions with dateRange string. Example:
+{{
+    "measures": ["SalesDaily.total_sales"], "timeDimensions": [{{"dimension": "SalesDaily.sales_date","dateRange":"Last 30 days"}}]
+    
+}}
+Valid dateRange values: "Last 7 days", "Last 30 days" , "Last 90 days", "Last year", "This month", "This year"
+
+
 YOUR TASK:
-1. Analyze sales volume, revenue, and transaction trends
-2. Check conversion rate (transactions/ traffic if available).
-3. Look at basket size changes and return rates
-4. Identify payment method shifts
-5. Check if sales decline correlates with traffic decline.
+1. Analyze sales volume and revenue trends
+2. Check transaction counts and average values
+3. Look at return rates
+4. Identify payment method distribution
 
 Generate 2-4 Cube.js queries as a JSON array.
 
@@ -81,6 +94,7 @@ Respond in this JSON format:
 
 
 async def sales_analyst_node(state: ChatState) -> dict:
+    print("Running: Sales Analyst Agent....")
     user_query = state["user_query"]
     entities = state.get("entities",{})
 
@@ -103,8 +117,10 @@ async def sales_analyst_node(state: ChatState) -> dict:
 
     for i,q in enumerate(queries[:4]):
         try: 
+            # print("QUERY",q)
             raw = await query_cubejs(q)
             data = format_cubejs_response(raw)
+            print("RESULT DATA", data[:5])
             results.append({"query_index":i, "data":data[:30]})
         except Exception as e:
             results.append({"query_index":i, "error":str(e)})

@@ -30,13 +30,24 @@ AVAILABLE CUBES:
 USER QUESTION = {user_query}
 ENTITIES = {entities}
 
+STRICT RULES: 
+- Only use the exact measure/dimension names listed above. Copy-paste them exactly.
+- DO NOT invent measure names - only use what's listed.
+- Never user filters with "operator": "beforeDate" or "values": ["now"] - this causes "invalid date" errors
+
+DATE HANDLING (MANDATORY FORMAT):
+Use timeDimensions with dateRange string. Example:
+{{
+    "measures": ["ExternalEvents.event_count"], "timeDimensions": [{{"dimension": "ExternalEvents.event_date","dateRange":"Last 30 days"}}]
+    
+}}
+Valid dateRange values: "Last 7 days", "Last 30 days" , "Last 90 days", "Last year", "This month", "This year"
+
 
 YOUR TASK:
-1. Check for weather events (storms, extreme temperatures)
-2. Look for road construction or closures near the store
-3. Identify competitor activity (new store openings, competitor promos)
-4. Check for community events, holiday, or local disruptions
-5. Correlate event timing with traffic changes
+1. Check event counts by event_type
+2. Look at impact_level distribution
+3. Check events by store_id
 
 Generate 2-4 Cube.js queries as a JSON array.
 
@@ -64,6 +75,7 @@ Respons in this JSON format:{{
 """
 
 async def external_analyst_node(state: ChatState) -> dict:
+    print("Running: External Analyst Agent....")
     user_query = state["user_query"]
     entities = state.get("entities",{})
 
@@ -86,8 +98,10 @@ async def external_analyst_node(state: ChatState) -> dict:
 
     for i,q in enumerate(queries[:4]):
         try: 
+            # print("QUERY",q)
             raw = await query_cubejs(q)
             data = format_cubejs_response(raw)
+            print("RESULT DATA", data[:5])
             results.append({"query_index":i, "data":data[:30]})
         except Exception as e:
             results.append({"query_index":i, "error":str(e)})

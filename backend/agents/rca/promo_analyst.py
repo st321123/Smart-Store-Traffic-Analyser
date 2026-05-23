@@ -38,12 +38,25 @@ AVAILABLE CUBES:
 USER QUESTION: {user_query}
 ENTITIES: {entities}
 
-YOUR TASK:
-1. Check active promotions vs prior period (promo hangover detection)
-2. Evaluate promotion lift and effectiveness.
-3. Look for recent price increases on key items.
-4. Compare promo calendar (are fewer promos driving less traffic?)
+STRICT RULES: 
+- Only use the exact measure/dimension names listed above. Copy-paste them exactly.
+- DO NOT invent measure names - only use what's listed.
+- Never user filters with "operator": "beforeDate" or "values": ["now"] - this causes "invalid date" errors
 
+DATE HANDLING (MANDATORY FORMAT):
+Use timeDimensions with dateRange string. Example:
+{{
+    "measures": ["Promotions.promo_count"], "timeDimensions": [{{"dimension": "Promotions.start_date","dateRange":"Last 30 days"}}]
+    
+}}
+Valid dateRange values: "Last 7 days", "Last 30 days" , "Last 90 days", "Last year", "This month", "This year"
+
+
+
+YOUR TASK:
+1. Check active promotions and discount levels
+2. Look at pricing (regular vs selling price)
+3. Check products on promo
 Generate 2-4 Cube.js queries as a JSON array.
 
 
@@ -75,6 +88,7 @@ Respond in this JSON format:
 
 
 async def promo_analyst_node(state: ChatState) -> dict:
+    print("Running: Promo Analyst Agent....")
     user_query = state["user_query"]
     entities = state.get("entities",{})
 
@@ -97,8 +111,10 @@ async def promo_analyst_node(state: ChatState) -> dict:
 
     for i,q in enumerate(queries[:4]):
         try: 
+            # print("QUERY",q)
             raw = await query_cubejs(q)
             data = format_cubejs_response(raw)
+            print("RESULT DATA", data[:5])
             results.append({"query_index":i, "data":data[:30]})
         except Exception as e:
             results.append({"query_index":i, "error":str(e)})

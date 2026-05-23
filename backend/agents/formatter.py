@@ -42,6 +42,7 @@ FORMAT RULES:
 """
 
 async def formatter_node(state: ChatState) -> dict:
+    print("Running: Formatter Agent....")
     intent = state.get("intent","")
 
     if intent == "kpi":

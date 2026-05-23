@@ -23,26 +23,50 @@ llm = AzureChatOpenAI(
 CUSTOMER_PROMPT = """ You are a retail customer experience analyst performing root cause analysis.
 
 AVAILABLE CUBES:
-- Customers: customer_count, avg_age(measures)
-  Dimension: customer_id, first_name, last_name, gender,city, state, registration_date
+- Customers: customer_count (measures)
+  Dimension: customer_id, first_name, last_name, gender_cd ,email ,city, state,loyalty_status,join_date
 
 - Feedback: feedback_count, avg_rating, low_rating_count, high_rating_count(measures)
-  Dimensions: store_id, feedback_date, rating, feedback_category,feedback_comments, feedback_text, resolution_status
+  Dimensions: store_id, feedback_date, rating, feedback_category,feedback_comments,resolution_status
 
-- ProductReviews: review_count, avg_rating, low_review_count, high_review_count (measures)
-  Dimensions: product_id, review_date, rating, review_text, verified_purchase
+- ProductReviews: avg_product_rating,review_count, total_helpful_votes, low_review_count, high_review_count (measures)
+  Dimensions: product_id, review_date, rating, review_text, verified_purchase_flag, helpful_votes
 
-- CustomerLoyalty: member_count, avg_points, total_points (measures)
-  Dimensions: customer_id, loyalty_tier, enrollment_date, points_balance, last_activity_date
+- CustomerLoyalty:total_points_earned, total_points_redeemed, avg_points_balance,loyalty_txn_count,avg_points_earned(measures)
+  Dimensions: customer_id, loyalty_id, transaction_date, transaction_type
 
 USER QUESTION: {user_query}
 ENTITIES: {entities}
 
+STRICT RULES: 
+- Only use the exact measure/dimension names listed above. Copy-paste them exactly.
+- DO NOT invent measure names - only use what's listed.
+- Never user filters with "operator": "beforeDate" or "values": ["now"] - this causes "invalid date" errors
+
+DATE HANDLING (MANDATORY FORMAT):
+Use timeDimensions with dateRange string. Example:
+{{
+    "measures": ["Feedback.feedback_count"], "timeDimensions": [{{"dimension": "Feedback.feedback_date","dateRange":"Last 30 days"}}]
+    
+}}
+Valid dateRange values: "Last 7 days", "Last 30 days" , "Last 90 days", "Last year", "This month", "This year"
+
+
+  
+FORBIDDEN NAMES (these  DO NOT EXIST - never use them):
+- "member_count" -> use "loyalty_txn_count" instead
+- "feedback_text" -> use "feedback_comments" instead
+- "sentiment" -> does not exist
+- "avg_rating" on ProductReviews -> use "avg_product_rating" instead
+- "avg_age" -> does not exist
+- "review_count" on Feedback -> use "feedback_count" instead
+
+
 YOUR TASK:
-1. Check NPS/ rating trends over time
-2. Analyze complaint volume and categories (what are customers unhappy about?)
-3. Look at loyalty engagement changes
-4. Identify sentiment shifts in feedback text categories
+1. Check rating trends over time
+2. Analyze complaint volume by feedback category.
+3. Look at loyalty transaction changes
+4. Check product review ratings.
 
 Generate 2-5 cube.js queries as a JSON array.
 """
@@ -54,13 +78,13 @@ USER QUESTION: {user_query}
 DATA FROM QUERIES:
 {query_results}
 
-Respons in this JSON format:{{
+Response in this JSON format:{{
 "summary":"1-2 sentence summary of customer/feedback finding",
 "severity":"high|medium|low|none",
 "metrics":{{
     "avg_rating_current":0,
     "complaint_count": 0,
-    "repeat_rate" 0,
+    "repeat_rate": 0,
     "loyalty_change":0
 }},
 "evidence":[ "specific data point 1", "specific data point 2"]
@@ -70,6 +94,7 @@ Respons in this JSON format:{{
 
 
 async def customer_analyst_node(state: ChatState)-> dict:
+    print("Running: Customers Analyst Agent....")
     user_query = state["user_query"]
     entities = state.get("entities",{})
 
@@ -91,9 +116,10 @@ async def customer_analyst_node(state: ChatState)-> dict:
     results = []
     for i , q in enumerate(queries[:4]):
         try:
+            # print("QUERY",q)
             raw = await query_cubejs(q)
             data = format_cubejs_response(raw)
-
+            print("RESULT DATA", data[:5])
             results.append({"query_index":i, "date": data[:30]})
         except Exception as e:
             results.append({"query_index":i, "error":str(e)}) 

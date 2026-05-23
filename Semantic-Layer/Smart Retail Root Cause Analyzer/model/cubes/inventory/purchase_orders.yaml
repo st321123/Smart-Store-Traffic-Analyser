@@ -137,7 +137,7 @@ cubes:
         type: sum
 
 
-      - name: total_recieved_qty
+      - name: total_received_qty
         sql: received_qty
         type: sum
 

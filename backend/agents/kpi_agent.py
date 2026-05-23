@@ -64,7 +64,11 @@ RULES:
 5. For trends, use timeDimensions with granularity.
 6. For comparison, you may need two queries.
 
-RESPOND WITH ONLY THE JSON QUERY. NO EXPLANATION.
+RESPOND WITH ONLY THE JSON OBJECT. 
+- Must strat with {{ and end with }}
+- Keys must be in double quotes
+- No markdown, no, explanation, no code blocks
+- Example: {{"measures": ["SalesDaily.total_sales"]}}
 
 
 """
@@ -87,10 +91,11 @@ Generate a clear, consise answer:
 """
 
 async def kpi_node(state: ChatState) -> dict:
+    print("Running: KPI Agent....")
     user_query = state["user_query"]
     entities = state.get("entities", {})
     cube_metadata = state.get("cube_metadata", "No metadata available")
-
+    
     query_response = await llm.ainvoke([
         { "role":"system", "content": KPI_QUERY_PROMPT.format(
                 cube_metadata = cube_metadata,
@@ -103,11 +108,14 @@ async def kpi_node(state: ChatState) -> dict:
     ])
 
     try: 
+        raw = query_response.content.strip()
+        if raw.startswith("```"):
+            raw = raw.strip("` \n").removeprefix("json").strip()
+        if not raw.startswith("{"):
+            raw = "{"+ raw + "{"
         cubejs_query = json.loads(query_response.content)
-
-
-
     except json.JSONDecodeError:
+        print(f"DEBUG KPI --LLM returned non-JSON: \n{query_response.content}")
         return {"response": "I couldn't understand how to query that. Could you rephrase your question?" }
     
     try:

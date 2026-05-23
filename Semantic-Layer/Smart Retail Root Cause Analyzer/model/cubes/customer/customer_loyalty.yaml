@@ -62,7 +62,7 @@ cubes:
         type: time
       
     measures: 
-      - name: total_poinits_earned
+      - name: total_points_earned
         sql: points_earned
         type: sum
       

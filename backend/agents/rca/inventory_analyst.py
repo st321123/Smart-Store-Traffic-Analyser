@@ -39,12 +39,25 @@ AVAILABLE CUBES:
 USER QUESTION: {user_query}
 ENTITIES: {entities}
 
-YOUR TASK:
-1. Check for key SKU stockouts and timing correlation with traffic drop
-2. Identify late POs and delayed shipments
-3. Evaluate supplier fill rates and reliability
-4. Look for active risk flags (critical/high severity)
+STRICT RULES: 
+- Only use the exact measure/dimension names listed above. Copy-paste them exactly.
+- DO NOT invent measure names - only use what's listed.
+- Never user filters with "operator": "beforeDate" or "values": ["now"] - this causes "invalid date" errors
 
+DATE HANDLING (MANDATORY FORMAT):
+Use timeDimensions with dateRange string. Example:
+{{
+    "measures": ["Inventory.total_on_hand"], "timeDimensions": [{{"dimension": "Inventory.snapshot_date","dateRange":"Last 30 days"}}]
+    
+}}
+Valid dateRange values: "Last 7 days", "Last 30 days" , "Last 90 days", "Last year", "This month", "This year"
+
+
+YOUR TASK:
+1. Check for stockouts (low_on_hand)
+2. Identify risk flags by risk_level
+3. Check PO status and delivery dates
+4. Look at shipment status
 Generate 2-4 Cube.js queries as a JSON array.
 
 
@@ -75,6 +88,7 @@ Respond in this JSON format:
 
 
 async def inventory_analyst_node(state: ChatState) -> dict:
+    print("Running: Inventory Analyst Agent....")
     user_query = state["user_query"]
     entities = state.get("entities",{})
 
@@ -97,8 +111,10 @@ async def inventory_analyst_node(state: ChatState) -> dict:
 
     for i,q in enumerate(queries[:4]):
         try: 
+            # print("query",q)
             raw = await query_cubejs(q)
             data = format_cubejs_response(raw)
+            print("RESULT DATA", data[:5]) 
             results.append({"query_index":i, "data":data[:30]})
         except Exception as e:
             results.append({"query_index":i, "error":str(e)})

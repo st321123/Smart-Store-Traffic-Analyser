@@ -64,6 +64,7 @@ RANKING RULES:
 
 
 async def synthesizer_node( state: ChatState) -> dict:
+    print("Running: Synthesizer Agent....")
     user_query = state["user_query"]
     findings = state.get("findings",[])
 

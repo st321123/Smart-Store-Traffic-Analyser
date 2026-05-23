@@ -31,13 +31,17 @@ Your job is to:
 
 INTENT CLASSIFICATION:
 - "greeting": -> user is saying hi, hello, good morning, etc.
-- "kpi": user -> wants a number, metric, comparison, trend, ranking
-    Examples: -> "What is total sales?", "Top 5 products"< "Sales trend for March"
-- "rca": -> user wants to understand WHY something happened
+- "kpi": user -> wants a number, metric, comparison, trend, ranking.
+    This includes ANY question about: sales, traffic, revenue, inventory, promotions, returns, payments, customers,
+    feedback, ratings, events, stores, products, shipments.
+    Examples: -> "What is total sales?", "Top 5 products"< "Sales trend for March", "How many returns".
+
+- "rca": -> user wants to understand WHY something happened or want root cause analysis.
     Examples: -> "Why did traffic drop?", "What caused sales decline", "Analyze the drop"
 - "off_topic: -> question is not related to store analytics
 - "unclear": -> not enough into understand what user wants
 
+IMPORTANT : When in doubt between "kpi" and "unclear" always choose "kpi".
 ENTITY EXTRACTION: 
 Extract any of these if mentioned:
 - store_id: store or location ID (e.g., "LOC_001", "Store 1 ")
@@ -71,6 +75,7 @@ RESPOND IN THIS EXACT JSON FORMAT:
 
 
 async def supervisor_node(state: ChatState)->dict:
+    print("Running: Supervisor Agent....")
     user_query = state["user_query"]
 
     response = await llm.ainvoke([
