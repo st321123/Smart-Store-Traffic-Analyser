@@ -19,30 +19,70 @@ llm = AzureChatOpenAI(
     temperature = 0
 )
 
-RCA_FORMAT_PROMPT = """ You are a retail analytics. Format the root cause
-analysis results into a clear, professional response for the user.
+RCA_FORMAT_PROMPT = """Format these root causes into a brief report.
 
 USER QUESTION : {user_query}
-DATA QUALITY SUMMARY: {data_quality_summary}
-ROOT CAUSES: (ranked):
+
+ROOT CAUSES:
 {root_causes}
 
-ANALYST FINDINGS: 
-{findings}
-
-FORMAT RULES: 
-
-1. Start with a brief executive summary (2 - 3 sentences)
-2. List any agents had data_quality "none", add a "Data Gaps" section FIRST listing which domains had missing data
-3. List root causes ranked by importance:
-    - For each: cause_name, severity, confidence, key evidence, recommendation
-    - If confidence is "low", explicitly note: "(low confidence - limited data)"
-4. Use markdown formatting: bold headers, bullet points, numbered lists 
-5. End with a "Recommended Actions" section with prioritized steps
-6. Keep it concise but comprehensive - max 400 words
-7. Use data-driven language with specific numbers from the evidence 
-8. NEVEr present a cause as certain if its evidence came from a agent with data_quality "none"
+RULES:
+- Use the exact numbers from the evidence fields - do not paraphrase
+- Use "may", "potentially", "possible" - never definitive langauge
+- Do NOT add causes that aren't in the ROOT CAUSES list
+- Do NOT mention promotions, pricing, or any domain not in the root causes
+- Keep it under 200 words
+- For each cause: state the finding, the evidence number, and a recommendation
 """
+
+def _build_code_header(findings: list, root_causes: list)-> str:
+    """
+    Builds the response header entirely in Python code.
+    This section is immune to LLM hallucination.
+    """
+    lines = []
+    lines.append("# Data Availability\n")
+    for f in findings:
+        agent = f.get("agent", "unknown")
+        quality = f.get("data_quality", "none")
+        succeeded = f.get("queries_succeeded",0)
+        failed = f.get("queries_failed",0)
+        label = agent.replace("_", " ").title()
+        if quality == "none":
+            lines.append(f"**{label}**: NO data retrieved ({failed} queries failed)")
+        elif quality == "partial":
+            lines.append(f"{label}: Partial data ({succeeded} ok, {failed} failed)")
+        else:
+            lines.append(f"{label}: Data available ({succeeded} queries succeeded)")
+    
+    lines.append("\n## Actual Metrics Retrieved\n")
+    has_metrics = False
+    for f in findings: 
+        if f.get("data_quality") == "none":
+            continue
+        agent = f.get("agent","unknown").replace("_"," ").title()
+        metrics = f.get("metrics",{})
+        evidence = f.get("evidence", [])
+        
+        if metrics:
+            for key, val in metrics.items():
+                if val is not None and val != 0 and val != "0":
+                    lines.append(f"- **{key}**: {val} * (from) {agent}")
+                    has_metrics = True
+        if evidence :
+            for e in evidence:
+                if e and "non" not in e.lower()[:10] and "none" not in e.lower()[:10]:
+                    lines.append(f"- {e} *(from {agent})*")
+                    has_metrics = True
+    if not has_metrics:
+        lines.append("- No specific metrics were retrieved from any agent.")
+
+    if root_causes:
+        confidence = root_causes[0].get("confidence", "low") if root_causes else "low"
+        lines.append(f"\n** Overall Confidence: {confidence.upper()} **\n")
+
+    lines.append("\n--\n")
+    return "\n".join(lines)
 
 async def formatter_node(state: ChatState) -> dict:
     print("Running: Formatter Agent....")
@@ -57,55 +97,32 @@ async def formatter_node(state: ChatState) -> dict:
     root_causes = state.get("root_causes", [])
     findings = state.get("findings",[])
 
+    if state.get("response") and not root_causes:
+        return {}
+    
+    
     if not root_causes and not findings:
         return {
     "response": "I wasn't able to find enough data to perform a root cause analysis. Could you provide more details about the store and time period?"}
 
-    quality_lines = []
-    agents_with_no_data = []
-    agents_with_data = []
-    for f in findings:
-        agent = f.get("agent", "unknown")
-        quality = f.get("data_quality", "unknown")
-        succeeded = f.get("queries_succeeded",0)
-        failed = f.get("queries_failed",0)
-        if quality == "none":
-            quality_lines.append(f"{agent}: NO DATA ({failed} queries failed)")
-            agents_with_no_data.append(agent)
-        elif quality == "partial":
-            quality_lines.append(f"{agent}: PARTIAL ({succeeded} ok, {failed} failed)")
-        else:
-            quality_lines.append(f"{agent}: Good ({succeeded} queries returned data)")
-    
-    data_quality_summary = "\n".join(quality_lines) if quality_lines else "No quality info available"
+    code_header = _build_code_header(findings,root_causes)
+    if not root_causes:
+        return {"response": code_header + "\nNo root causes could be identified from the available data."}
 
-        
-    disclaimer = ""
-    
-    if len(agents_with_no_data) >= 4:
-        disclaimer =(
-            "## Limited Data Availability \n \n"
-            f"**{len(agents_with_no_data)} out of 6** analyst agent could not retrieve data" 
-            "for requested period. The anlysis below is based on limited evidence "
-            "and should be treated with low confidence. \n\n"
-            f"**Data available from:** {', '.join(agents_with_data) if agents_with_data else 'None'}\n\n"
-            f"**No data from:** {', '.join(agents_with_no_data)}\n\n"
-        )
 
     response = await llm.ainvoke([
         {
             "role": "system",
             "content": RCA_FORMAT_PROMPT.format(
                 user_query  = state["user_query"],
-                data_quality_summary = data_quality_summary,
                 root_causes = json.dumps(root_causes, indent = 2, default = str),
-                findings = json.dumps(findings, indent = 2, default = str),
+                
             )},
 
         {
             "role": "user",
-            "content": "Format the root cause analysis report."
+            "content": "Format the root cause analysis.",
         },
     ])
 
-    return {"response": disclaimer + response.content}
+    return {"response": code_header + response.content}
