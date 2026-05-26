@@ -9,9 +9,9 @@ CUBES: StoreTraffic, Calendar, Location
 import json 
 import os 
 from langchain_openai import AzureChatOpenAI
-from agents.state import ChatState, AgentFinding
+from agents.state import ChatState
 from tools.cubejs_client import query_cubejs, format_cubejs_response
-
+from agents.rca.guardrails import compute_data_quality, build_safe_finding
 llm = AzureChatOpenAI(
     azure_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"),
@@ -56,6 +56,8 @@ Use timeDimensions with dateRange string. Example:
 }}
 Valid dateRange values: "Last 7 days", "Last 30 days" , "Last 90 days", "Last year", "This month", "This year"
 
+Generate 2-4 Cube.js queries as a valid JSON array only.
+Do not include explanations or markdown.
 """
 
 TRAFFIC_ANALYSIS_PROMPT = """ You are a traffic analyst. Based on the data below, 
@@ -116,6 +118,13 @@ async def traffic_analyst_node(state: ChatState) -> dict:
         except Exception as e:
             results.append({"query_index":i, "error":str(e)})
 
+
+    quality,succeeded,failed = compute_data_quality(results)
+    print(f"Traffic data quality: {quality} {succeeded} , {failed}")
+
+    if quality == "none":
+        return{"findings":[build_safe_finding("traffic_analyst",{},quality,succeeded, failed)]}
+    
     analysis_response = await llm.ainvoke([
         {
             "role":"system",
@@ -138,13 +147,4 @@ async def traffic_analyst_node(state: ChatState) -> dict:
          
 
     return {
-        "findings": [ AgentFinding(
-            agent = "traffic_analyst",
-            summary = finding.get("summary",""),
-            severity = finding.get("severity", "none"),
-            metrics = finding.get("metrics",{}),
-            evidence = finding.get("evidence",[])
-        )
-
-        ]
-    }
+        "findings": [ build_safe_finding( "traffic_analyst",finding, quality, succeeded, failed)]}

@@ -10,8 +10,9 @@ CUBES: SalesDaily, POSTransactions, POSLineItems, Returns, Payments
 import json 
 import os 
 from langchain_openai import AzureChatOpenAI
-from agents.state import ChatState, AgentFinding
+from agents.state import ChatState
 from tools.cubejs_client import query_cubejs, format_cubejs_response
+from agents.rca.guardrails import compute_data_quality, build_safe_finding
 
 llm = AzureChatOpenAI(
     azure_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
@@ -124,7 +125,11 @@ async def sales_analyst_node(state: ChatState) -> dict:
             results.append({"query_index":i, "data":data[:30]})
         except Exception as e:
             results.append({"query_index":i, "error":str(e)})
+    quality, succeeded, failed = compute_data_quality(results)
+    print(f" Sales data quality : {quality} {succeeded}, {failed}")
 
+    if quality == "none":
+        return {"findings": [ build_safe_finding("sales_analyst",{}, quality, succeeded, failed)]}
     analysis_response = await llm.ainvoke([
         {
             "role":"system",
@@ -147,13 +152,4 @@ async def sales_analyst_node(state: ChatState) -> dict:
          
 
     return {
-        "findings": [ AgentFinding(
-            agent = "sales_analyst",
-            summary = finding.get("summary",""),
-            severity = finding.get("severity", "none"),
-            metrics = finding.get("metrics",{}),
-            evidence = finding.get("evidence",[])
-        )
-
-        ]
-    }
+        "findings": [ build_safe_finding("sales_analyst",finding,quality,succeeded, failed)]}

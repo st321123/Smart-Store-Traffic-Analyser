@@ -9,8 +9,9 @@ CUBES: Customers, Feedback, ProductReviews , CustomerLoyalty
 import json 
 import os
 from langchain_openai import AzureChatOpenAI
-from agents.state import ChatState, AgentFinding
+from agents.state import ChatState
 from tools.cubejs_client import query_cubejs, format_cubejs_response
+from agents.rca.guardrails import compute_data_quality, build_safe_finding
 
 llm = AzureChatOpenAI(
         azure_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
@@ -125,6 +126,11 @@ async def customer_analyst_node(state: ChatState)-> dict:
             results.append({"query_index":i, "error":str(e)}) 
 
 
+    quality, succeeded, failed = compute_data_quality(results)
+    print(f" Customer data quality : {quality} {succeeded}, {failed}")
+    if quality == "none":
+        return {"findings": [ build_safe_finding("customer_feedback_analyst",{}, quality, succeeded, failed)]}
+    
     analysis_response = await llm.ainvoke(
         [
         {"role":"system","content": CUSTOMER_ANALYSIS_PROMPT.format(
@@ -140,12 +146,4 @@ async def customer_analyst_node(state: ChatState)-> dict:
         finding = {"summary":"Unable to analyze customer data","severity":"none","metric":{},"evidence": []}
 
 
-    return {
-        "findings": [AgentFinding(
-            agent = "customer_feedback_analyst",
-            summary = finding.get("summary",""),
-            severity = finding.get("severity", "none"),
-            metrics = finding.get("metrics",{}),
-            evidence = finding.get("evidence",[])
-        )]
-    }
+    return {"findings": [ build_safe_finding("customer_feedback_analyst",finding,quality,succeeded, failed)]}

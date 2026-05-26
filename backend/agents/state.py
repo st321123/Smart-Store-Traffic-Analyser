@@ -25,6 +25,9 @@ class AgentFinding(TypedDict):
     severity: str # "high","medium, "Low","none"
     metrics: dict
     evidence: list[str]
+    data_quality: str
+    queries_succeeded: int 
+    queries_failed: int
 
 
 
