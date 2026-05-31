@@ -1,0 +1,25 @@
+{
+  "name": "smart-store-traffic-ui",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 5173",
+    "postinstall": "tailwindcss -i ./src/index.css -o ./src/tailwind-output.css --minify"
+  },
+  "dependencies": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "vite": "4.5.0",
+    "@vitejs/plugin-react": "3.1.0",
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.21",
+    "autoprefixer": "^10.4.14",
+    "typescript": "5.1.6",
+    "@types/react": "18.2.21",
+    "@types/react-dom": "18.2.7"
+  }
+}
