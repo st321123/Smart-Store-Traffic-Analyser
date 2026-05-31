@@ -7,23 +7,42 @@ Tracks data quality per agent and prevents hallucination when queries fail or re
 
 from agents.state import AgentFinding
 
+def _is_empty_value(val)->bool:
+    """ Returns True if a value is None, empty,zero or zero-string """
+    if val is None:
+        return True
+    if isinstance(val,str):
+        stripped = val.strip()
+        if stripped in ("","0","0.0","0.00"):
+            return True
+        try: 
+            return float(stripped) == 0
+        except ValueError:
+            return False
+        
+    if isinstance(val,(int,float)):
+        return val ==0
+    return False
+
 def _has_meaningful_data(row: dict) -> bool:
     """
-    Return True only if at least one value in the row is non_None
+    Returns True only if at least one value in the row is non-None
     and non-zero (i.e., contains actual business data).
+    Dimension values (like location_id, store_id) don't count as evidence
+    unless accompained by a real metric.
 
     """
-    for val in row.values():
-        if val is None:
+    for key,val in row.items():
+        if _is_empty_value(val):
             continue
-        if isinstance(val,str):
-            stripped = val.strip()
-            if stripped in ("","0", "0.0","0.00"):
-                continue
-            return True
-        if isinstance(val,(int,float)) and val != 0:
-            return True
+        key_lower = key.lower()
+        is_id_field = (key_lower.endswith("_id") or key_lower.endswith(".location_sk")
+)
+        if is_id_field :
+            continue
+        return True
     return False
+        
 def compute_data_quality(results: list[dict]) -> tuple [str, int, int ]:
     """
     Analyzes query results and returns (quality_label, succeeded, failed).
@@ -44,12 +63,17 @@ def compute_data_quality(results: list[dict]) -> tuple [str, int, int ]:
     for r in results: 
         if "error" in r:
             failed += 1
-        elif not r.get("data"):
+            continue
+        data = r.get('data')
+        if not data or len(data) == 0:
             failed += 1
-        elif len(r["data"]) == 0:
-            failed += 1
-        else:
+            continue
+        has_real_data = any(_has_meaningful_data(row) for row in data)
+        if has_real_data:
             succeeded += 1
+        else : 
+            failed += 1
+    
 
     if succeeded == 0:
         return "none", succeeded, failed
