@@ -8,14 +8,10 @@ FLOW: Supervisor (intent = kpi) -> KPI Agent -> Response
 
 import json
 import os 
+from datetime import datetime, timezone
 from langchain_openai import AzureChatOpenAI
-from agents.state import ChatState
+from agents.state import ChatState,QueryRecord, TraceStep
 from tools.cubejs_client import query_cubejs, format_cubejs_response
-
-
-
-
-
 llm = AzureChatOpenAI(
     azure_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"),
@@ -23,6 +19,9 @@ llm = AzureChatOpenAI(
     api_version = os.getenv("AZURE_OPENAI_API_VERSION"),
     temperature = 0
 )
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 KPI_QUERY_PROMPT = """" You are a retail data analyst. Your job is to convert the user's natural langugage 
@@ -95,7 +94,10 @@ async def kpi_node(state: ChatState) -> dict:
     user_query = state["user_query"]
     entities = state.get("entities", {})
     cube_metadata = state.get("cube_metadata", "No metadata available")
-    
+    trace: list[TraceStep] = []
+    queries: list[QueryRecord] = []
+
+    trace.append(TraceStep(agent= "kpi_agent",action = "Generating Cube.js from user question",detail = "", timestamp = _now()))
     query_response = await llm.ainvoke([
         { "role":"system", "content": KPI_QUERY_PROMPT.format(
                 cube_metadata = cube_metadata,
@@ -112,20 +114,25 @@ async def kpi_node(state: ChatState) -> dict:
         if raw.startswith("```"):
             raw = raw.strip("` \n").removeprefix("json").strip()
         if not raw.startswith("{"):
-            raw = "{"+ raw + "{"
-        cubejs_query = json.loads(query_response.content)
+            raw = "{"+ raw + "}"
+        cubejs_query = json.loads(raw)
     except json.JSONDecodeError:
         print(f"DEBUG KPI --LLM returned non-JSON: \n{query_response.content}")
-        return {"response": "I couldn't understand how to query that. Could you rephrase your question?" }
-    
+        trace.append(TraceStep(agent= "kpi_agent",action = "LLM returned invalid JSON - could not parse query ",detail = query_response.content[:200], timestamp = _now()))
+        return {"response": "I couldn't understand how to query that. Could you rephrase your question?", "agent_trace": trace,}
+    trace.append(TraceStep(agent= "kpi_agent",action = f"Generated Cube.js query targetting {list(cubejs_query.get('measures',[]))}",detail = json.dumps(cubejs_query), timestamp = _now()))
     try:
         raw_response = await query_cubejs(cubejs_query)
         data = format_cubejs_response(raw_response)
+        queries.append(QueryRecord(agent= "kpi_agent", query = cubejs_query,data = data[:20], status = "success" if data else "empty", error = ""))
+        trace.append(TraceStep(agent= "kpi_agent",action = f"cube.js returned {len(data)} row(s)",detail = "", timestamp = _now()))
 
     except Exception as e :
-        return {"response":f"I had trouble fetching the data. Error: {str(e)}"}
+        queries.append(QueryRecord(agent= "kpi_agent", query = cubejs_query,data = [], status = "error",error = str(e)))
+        trace.append(TraceStep(agent= "kpi_agent",action = f"Cube.js query failed:{e} ",detail = "", timestamp = _now()))
+        return {"response":f"I had trouble fetching the data. Error: {str(e)}","queries_executed":queries,"agent_trace": trace}
     
-
+    trace.append(TraceStep(agent= "kpi_agent",action = "Generating natural language answer from data",detail = "", timestamp = _now()))
     answer_response = await llm.ainvoke([
         {
             "role": "system", "content": KPI_ANSWER_PROMPT.format(
@@ -138,5 +145,8 @@ async def kpi_node(state: ChatState) -> dict:
         },
     ])
 
-
-    return {"response": answer_response.content}
+    trace.append(TraceStep(agent= "kpi_agent",action = "KPI answer generated successfully",detail ="", timestamp = _now()))
+    return {"response": answer_response.content,
+            "queries_executed":queries,
+            "agent_trace": trace,
+            }

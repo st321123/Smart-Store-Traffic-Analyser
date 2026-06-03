@@ -11,6 +11,32 @@ from operator import add
 
 
 
+# -------------------------------------------------------------------------
+# QueryRecord: Tracks every cube.js query an agent executes.
+# Sent to frontend so it can display the JSON queries + raw data.
+# -------------------------------------------------------------------------
+
+
+class QueryRecord(TypedDict):
+    agent:str # which agent ran thsi query 
+    query:dict # the Cube.js JSON query sent
+    data:list # raw data returned (truncated)
+    status: str # "success" | "error" | "empty"
+    error: str # error message if failed, "" otherwise
+
+# -----------------------------------------------------------------------------
+# TraceStep: One step in the agent reasoning trace.
+# Sent to frontend for the "Reasoning" expandable section.
+# ------------------------------------------------------------------------------ 
+
+class TraceStep(TypedDict):
+    agent: str      # which agent produced this step
+    action: str     # human -readable description of what happened
+    detail: str     # optional extra detail (e.g. quality label, confidence)
+    timestamp: str  # ISO timestamp
+
+
+
 
 
 # -----------------------------------------------------------------------------------
@@ -62,8 +88,10 @@ class RankedCause(TypedDict):
 class ChatState(TypedDict):
     user_query: str
     intent: str
-    entities: str
+    entities: dict
     cube_metadata:str
     findings: Annotated[list[AgentFinding],add]
     root_causes: list[RankedCause]
     response: str
+    queries_executed: Annotated[list[QueryRecord],add]
+    agent_trace: Annotated[list[TraceStep],add]

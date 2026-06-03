@@ -9,7 +9,8 @@ CUBES: Inventory, InventoryRisk, PurchaseOrders, Shipments, Supplier
 import json 
 import os 
 from langchain_openai import AzureChatOpenAI
-from agents.state import ChatState
+from datetime import datetime, timezone
+from agents.state import ChatState,QueryRecord, TraceStep
 from tools.cubejs_client import query_cubejs, format_cubejs_response
 from agents.rca.guardrails import compute_data_quality, build_safe_finding
 
@@ -21,6 +22,28 @@ llm = AzureChatOpenAI(
     temperature = 0
 )
 
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+# trace: list[TraceStep] = []
+# query_records: list[QueryRecord] = []
+# trace.append(TraceStep(agent= "kpi_agent",action = "Generating Cube.js from user question",detail = "", timestamp = _now()))
+# trace.append(TraceStep(agent= "kpi_agent",action = "LLM returned invalid JSON - could not parse query ",detail = query_response.content[:200], timestamp = _now()))
+# return {"response": "I couldn't understand how to query that. Could you rephrase your question?", "agent_trace": trace,}
+# trace.append(TraceStep(agent= "kpi_agent",action = f"Generated Cube.js query targetting {list(cubejs_query.get('measures',[]))}",detail = json.dumps(cubejs_query), timestamp = _now()))
+# query_records.append(QueryRecord(agent= "kpi_agent", query = cubejs_query,data = data[:20], status = "success" if data else "empty", error = ""))
+#         trace.append(TraceStep(agent= "kpi_agent",action = f"cube.js returned {len(data)} row(s)",detail = "", timestamp = _now()))
+#         query_records.append(QueryRecord(agent= "kpi_agent", query = cubejs_query,data = [], status = "error",error = str(e)))
+#         trace.append(TraceStep(agent= "kpi_agent",action = f"Cube.js query failed:{e} ",detail = "", timestamp = _now()))
+#         return {"response":f"I had trouble fetching the data. Error: {str(e)}","queries_executed":query_records,"agent_trace": trace}
+    
+#     trace.append(TraceStep(agent= "kpi_agent",action = "Generating natural language answer from data",detail = "", timestamp = _now()))
+# trace.append(TraceStep(agent= "kpi_agent",action = "KPI answer generated successfully",detail ="", timestamp = _now()))
+#     return {"response": answer_response.content,
+#             "queries_executed":query_records,
+#             "agent_trace": trace,
+#             }
 INVENTORY_PROMPT = """ You are a retail inventory and supply chain analyst performing root cause analysis.
 AVAILABLE CUBES:
 - Inventory: total_on_hand, total_reserved, total_damaged, available_stock, avg_on_hand, snapshot_count(measures)
@@ -92,7 +115,9 @@ async def inventory_analyst_node(state: ChatState) -> dict:
     print("Running: Inventory Analyst Agent....")
     user_query = state["user_query"]
     entities = state.get("entities",{})
-
+    # trace: list[TraceStep] = []
+# query_records: list[QueryRecord] = []
+# trace.append(TraceStep(agent= "kpi_agent",action = "Generating Cube.js from user question",detail = "", timestamp = _now()))
     query_response = await llm.ainvoke([
         {"role":"system", "content":INVENTORY_PROMPT.format(
             user_query = user_query,
@@ -107,7 +132,7 @@ async def inventory_analyst_node(state: ChatState) -> dict:
 
     except json.JSONDecodeError:
         queries = []
-
+    # trace.append(TraceStep(agent= "kpi_agent",action = "Generating Cube.js from user question",detail = "", timestamp = _now()))
     results = []
 
     for i,q in enumerate(queries[:4]):
@@ -117,12 +142,17 @@ async def inventory_analyst_node(state: ChatState) -> dict:
             data = format_cubejs_response(raw)
             print("RESULT DATA", data[:5]) 
             results.append({"query_index":i, "data":data[:30]})
+            # query_records.append(QueryRecord(agent= "kpi_agent", query = cubejs_query,data = data[:20], status = "success" if data else "empty", error = ""))
         except Exception as e:
+
             results.append({"query_index":i, "error":str(e)})
+            # query_records.append(QueryRecord(agent= "kpi_agent", query = cubejs_query,data = data[:20], status = "success" if data else "empty", error = ""))
 
     quality, succeeded, failed = compute_data_quality(results)
     print(f" Inventory data quality : {quality} {succeeded}, {failed}")
+    # trace.append(TraceStep(agent= "kpi_agent",action = "Generating Cube.js from user question",detail = "", timestamp = _now()))
     if quality == "none":
+        # trace.append(TraceStep(agent= "kpi_agent",action = "Generating Cube.js from user question",detail = "", timestamp = _now()))
         return {"findings": [ build_safe_finding("inventory_supply_analyst",{}, quality, succeeded, failed)]}
     
     analysis_response = await llm.ainvoke([
@@ -145,5 +175,5 @@ async def inventory_analyst_node(state: ChatState) -> dict:
     except json.JSONDecodeError:
         finding = {"summary": "Unable to analyse inventory data", "severity":"none","metrics":{}, "evidence":[]}
          
-
+    # trace.append(TraceStep(agent= "kpi_agent",action = "Generating Cube.js from user question",detail = "", timestamp = _now()))
     return {"findings": [ build_safe_finding("inventory_supply_analyst",finding,quality,succeeded, failed)]}

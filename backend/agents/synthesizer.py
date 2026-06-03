@@ -21,6 +21,31 @@ llm = AzureChatOpenAI(
     temperature = 0
 )
 
+from datetime import datetime, timezone
+
+from agents.state import ChatState,QueryRecord, TraceStep
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+# trace: list[TraceStep] = []
+# queries: list[QueryRecord] = []
+# trace.append(TraceStep(agent= "kpi_agent",action = "Generating Cube.js from user question",detail = "", timestamp = _now()))
+# trace.append(TraceStep(agent= "kpi_agent",action = "LLM returned invalid JSON - could not parse query ",detail = query_response.content[:200], timestamp = _now()))
+# return {"response": "I couldn't understand how to query that. Could you rephrase your question?", "agent_trace": trace,}
+# trace.append(TraceStep(agent= "kpi_agent",action = f"Generated Cube.js query targetting {list(cubejs_query.get('measures',[]))}",detail = json.dumps(cubejs_query), timestamp = _now()))
+# queries.append(QueryRecord(agent= "kpi_agent", query = cubejs_query,data = data[:20], status = "success" if data else "empty", error = ""))
+#         trace.append(TraceStep(agent= "kpi_agent",action = f"cube.js returned {len(data)} row(s)",detail = "", timestamp = _now()))
+#         queries.append(QueryRecord(agent= "kpi_agent", query = cubejs_query,data = [], status = "error",error = str(e)))
+#         trace.append(TraceStep(agent= "kpi_agent",action = f"Cube.js query failed:{e} ",detail = "", timestamp = _now()))
+#         return {"response":f"I had trouble fetching the data. Error: {str(e)}","queries_executed":queries,"agent_trace": trace}
+    
+#     trace.append(TraceStep(agent= "kpi_agent",action = "Generating natural language answer from data",detail = "", timestamp = _now()))
+# trace.append(TraceStep(agent= "kpi_agent",action = "KPI answer generated successfully",detail ="", timestamp = _now()))
+#     return {"response": answer_response.content,
+#             "queries_executed":queries,
+#             "agent_trace": trace,
+#             }
 SYNTHESIZER_PROMPT = """You are a senior retail analytics lead.
 
 USER QUESTION: {user_query}

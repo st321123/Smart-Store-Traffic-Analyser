@@ -9,9 +9,15 @@ CUBES: StoreTraffic, Calendar, Location
 import json 
 import os 
 from langchain_openai import AzureChatOpenAI
-from agents.state import ChatState
+from agents.state import ChatState,QueryRecord, TraceStep
+from datetime import datetime, timezone
 from tools.cubejs_client import query_cubejs, format_cubejs_response
 from agents.rca.guardrails import compute_data_quality, build_safe_finding
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
 llm = AzureChatOpenAI(
     azure_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"),
@@ -19,6 +25,16 @@ llm = AzureChatOpenAI(
     api_version = os.getenv("AZURE_OPENAI_API_VERSION"),
     temperature = 0
 )
+
+
+
+from datetime import datetime, timezone
+
+from agents.state import ChatState,QueryRecord, TraceStep
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
 
 TRAFFIC_PROMPT = """ You are a retail traffic analyst performing root cause analysis.
 
@@ -90,7 +106,10 @@ async def traffic_analyst_node(state: ChatState) -> dict:
     print("Running: Traffic Analyst Agent....")
     user_query = state["user_query"]
     entities = state.get("entities",{})
+    trace: list[TraceStep] = []
+    query_records: list[QueryRecord] = []
 
+    trace.append(TraceStep(agent= "traffic_analyst",action = "Generating Cubeljs queries for traffic analysis", detail = "", timestamp = _now()))
     query_response = await llm.ainvoke([
         {"role":"system", "content":TRAFFIC_PROMPT.format(
             user_query = user_query,
@@ -105,8 +124,10 @@ async def traffic_analyst_node(state: ChatState) -> dict:
 
     except json.JSONDecodeError:
         queries = []
-
+    trace.append(TraceStep(agent= "traffic_analyst",action = f"Generated {len(queries)} queries", detail = "", timestamp = _now()))
     results = []
+    
+    
 
     for i,q in enumerate(queries[:4]):
         try: 
@@ -115,15 +136,19 @@ async def traffic_analyst_node(state: ChatState) -> dict:
             data = format_cubejs_response(raw)
             print("RESULT DATA", data[:5])
             results.append({"query_index":i, "data":data[:30]})
+            query_records.append(QueryRecord(agent = "traffic_analyst", query =q, data = data[:20], status = "success" if data else "empty",error = ""))
         except Exception as e:
             results.append({"query_index":i, "error":str(e)})
+            query_records.append(QueryRecord(agent = "traffic_analyst", query =q, data = [], status = "error", error = str(e)))
 
 
     quality,succeeded,failed = compute_data_quality(results)
     print(f"Traffic data quality: {quality} {succeeded} , {failed}")
-
+    trace.append(TraceStep(agent= "traffic_analyst",action = f"Data quality: {quality} {succeeded} ok, {failed}:falied queries", detail = "", timestamp = _now()))
     if quality == "none":
+        trace.append(TraceStep(agent= "traffic_analyst",action = f"Skipped LLM analysis - no usable data", detail = "", timestamp = _now()))
         return{"findings":[build_safe_finding("traffic_analyst",{},quality,succeeded, failed)]}
+    
     
     analysis_response = await llm.ainvoke([
         {
@@ -145,6 +170,6 @@ async def traffic_analyst_node(state: ChatState) -> dict:
     except json.JSONDecodeError:
         finding = {"summary": "Unable to analyse traffic data", "severity":"none","metrics":{}, "evidence":[]}
          
-
+    trace.append(TraceStep(agent= "traffic_analyst",action = f"Analysis complete - severity: {finding.get('severity','unknown',)}", detail = "", timestamp = _now()))
     return {
-        "findings": [ build_safe_finding( "traffic_analyst",finding, quality, succeeded, failed)]}
+        "findings": [ build_safe_finding( "traffic_analyst",finding, quality, succeeded, failed)], "queries_executed": query_records, "agent_trace": trace}

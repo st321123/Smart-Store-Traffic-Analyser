@@ -10,7 +10,10 @@ CUBES: SalesDaily, POSTransactions, POSLineItems, Returns, Payments
 import json 
 import os 
 from langchain_openai import AzureChatOpenAI
-from agents.state import ChatState
+from datetime import datetime, timezone
+
+from agents.state import ChatState,QueryRecord, TraceStep
+
 from tools.cubejs_client import query_cubejs, format_cubejs_response
 from agents.rca.guardrails import compute_data_quality, build_safe_finding
 
@@ -21,6 +24,12 @@ llm = AzureChatOpenAI(
     api_version = os.getenv("AZURE_OPENAI_API_VERSION"),
     temperature = 0
 )
+
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
 
 SALES_PROMPT = """ You are a retail sales analyst performing root cause analysis.
 
@@ -98,6 +107,9 @@ async def sales_analyst_node(state: ChatState) -> dict:
     print("Running: Sales Analyst Agent....")
     user_query = state["user_query"]
     entities = state.get("entities",{})
+    trace: list[TraceStep] = []
+    query_records: list[QueryRecord] = []
+    trace.append(TraceStep(agent= "sales_analyst",action = "Generating Cube.js for sales analysis",detail = "", timestamp = _now()))
 
     query_response = await llm.ainvoke([
         {"role":"system", "content":SALES_PROMPT.format(
@@ -109,11 +121,16 @@ async def sales_analyst_node(state: ChatState) -> dict:
 
 
     try:
-        queries = json.loads(query_response.content)
+        raw = query_response.content.strip()
+
+        if raw.startswith("```"):
+            raw = raw.strip("` \n").removeprefix("json").strip()
+
+        queries = json.loads(raw)
 
     except json.JSONDecodeError:
         queries = []
-
+    trace.append(TraceStep(agent= "sales_analyst",action = f"Generating {len(queries)} queries",detail = "", timestamp = _now()))
     results = []
 
     for i,q in enumerate(queries[:4]):
@@ -123,13 +140,19 @@ async def sales_analyst_node(state: ChatState) -> dict:
             data = format_cubejs_response(raw)
             print("RESULT DATA", data[:5])
             results.append({"query_index":i, "data":data[:30]})
+            query_records.append(QueryRecord(agent= "sales_analyst", query = q,data = data[:20], status = "success" if data else "empty", error = ""))
         except Exception as e:
             results.append({"query_index":i, "error":str(e)})
+            query_records.append(QueryRecord(agent= "sales_analyst", query = q,data = [], status = "error", error = str(e)))
+
+
     quality, succeeded, failed = compute_data_quality(results)
     print(f" Sales data quality : {quality} {succeeded}, {failed}")
-
+    trace.append(TraceStep(agent= "sales_analyst",action = f"Data quality: {quality} ({succeeded} ok,{failed} failed)",detail = "", timestamp = _now()))
+    
     if quality == "none":
-        return {"findings": [ build_safe_finding("sales_analyst",{}, quality, succeeded, failed)]}
+        trace.append(TraceStep(agent= "sales_analyst",action = "Skipped LLM analysis - no usable data", detail = "", timestamp = _now()))
+        return {"findings": [ build_safe_finding("sales_analyst",{}, quality, succeeded, failed)],"queries_executed": query_records,"agent_trace": trace}
     analysis_response = await llm.ainvoke([
         {
             "role":"system",
@@ -150,6 +173,6 @@ async def sales_analyst_node(state: ChatState) -> dict:
     except json.JSONDecodeError:
         finding = {"summary": "Unable to analyse sales data", "severity":"none","metrics":{}, "evidence":[]}
          
-
+    trace.append(TraceStep(agent= "sales_analyst",action = f"Analysis complete - severity : {finding.get('severity','unkonwn')}",detail = "", timestamp = _now()))
     return {
-        "findings": [ build_safe_finding("sales_analyst",finding,quality,succeeded, failed)]}
+        "findings": [ build_safe_finding("sales_analyst",finding,quality,succeeded, failed)], "queries_executed":query_records, "agent_trace":trace}
